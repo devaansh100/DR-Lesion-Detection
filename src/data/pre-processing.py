@@ -42,6 +42,16 @@ def mask(img):
 			bottom = rows - (row - 5)
 			break
 
+	#In case there is no extra white edge
+	if left < 0:
+		left = 0
+	if right > cols:
+		right = cols
+	if top < 0:
+		top = 0
+	if bottom < rows:
+		bottom = rows
+
 	maskedImg = maskedImg[top:bottom, left:right]
 
 	return maskedImg
