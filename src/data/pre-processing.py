@@ -18,17 +18,21 @@ def get_images():
 def mask(img):
 	'''Creates a mask for the image to remove outer black borders'''
 
+	#Resizing the image
+	rows, _ = img.shape
+	scale = 600/rows if rows > 600 else rows/600
+	maskedImg = cv2.resize(img, None, fx = scale, fy = scale, interpolation = cv2.INTER_CUBIC)
+
 	#Creating the mask. Remove black pixels and change to white pixels
 	maskedImg = np.where(maskedImg < 30, 255, maskedImg)
 
-	#Resizing the image
-	rows, _, _ = img.shape
-	scale = 600/rows if rows > 600 else rows/600
-	maskedImg = cv2.resize(img, None, fx = scale, fy = scale, interpolation = cv2.INTER_CUBIC)
+	# #Choosing only the green channel
+	# maskedImg = maskedImg[:,:,2]
+
 	return maskedImg
 
 def crop_edges(img):
-	rows, cols,_ = img.shape
+	rows, cols = img.shape
 
 	#Finding the color of the edges
 	borderColor = img[0,0]
@@ -39,22 +43,22 @@ def crop_edges(img):
 
 	#Finding the edges where the fundus image starts
 	for col in range(0, cols):
-		if not np.all(img[:,col,:] == borderColor):
+		if not np.all(img[:,col] == borderColor):
 			left = col - 5
 			break
 
 	for col in range(0, cols):
-		if not np.all(img[:,-col,:] == borderColor):
+		if not np.all(img[:,-col] == borderColor):
 			right = cols - (col - 5)
 			break
 
 	for row in range(0, rows):
-		if not np.all(img[row,:,:] == borderColor):
+		if not np.all(img[row,:] == borderColor):
 			top = row - 5
 			break
 
 	for row in range(0, rows):
-		if not np.all(img[-row,:,:] == borderColor):
+		if not np.all(img[-row,:] == borderColor):
 			bottom = rows - (row - 5)
 			break
 
@@ -69,18 +73,18 @@ def crop_edges(img):
 		bottom = rows
 
 	#Cropping the images to remove extra edges
-	img = img[top:bottom, left:right, :]
+	img = img[top:bottom, left:right]
 
 	return img
 
 def remove_optic_disc(img):
 
-	#Extracting the red channel of the image
+	# Extracting the red channel of the image
 	imgR = img[:,:,2]
 	kernel = np.ones((3,3))
 
 	#Dialating and eroding the image to remove the blood vessels
-	grayDil = cv2.dilate(imgG, kernel, iterations = 7)
+	grayDil = cv2.dilate(imgR, kernel, iterations = 7)
 	grayEr = cv2.erode(grayDil, kernel, iterations = 3)
 
 	#Reducing salt and pepper noise introduced by the dilation and erosion
@@ -151,11 +155,17 @@ def remove_optic_disc(img):
 
 	return img
 
+def normalize(img):
+	#Enhancing the contrast
+	clahe = cv2.createCLAHE(clipLimit = 3)
+	imgNorm = clahe.apply(img)
+	return imgNorm
+
 def preprocess(image):
 	#In case the image passed is a .DS_Store
 	if 'DS' in image:
 		return 0
-	img = cv2.imread(image, -1)
+	img = cv2.imread(image, -1)[:,:,1]
 
 	#Resize the image and make the background white
 	img = mask(img)
@@ -163,7 +173,9 @@ def preprocess(image):
 	#Cropping the extra edges
 	img = crop_edges(img)
 
-	# img = normalise(img)
+	#Cropping the extra edges
+	img = normalize(img)
+
 	# img = accentuate(img)	
 	# cv2.imshow(image, img)
 	cv2.imshow(image,img)
@@ -172,11 +184,13 @@ def preprocess(image):
 
 
 def main():
-	# with concurrent.futures.ProcessPoolExecutor() as executor:
-		# images = get_images()
-		# results = executor.map(preprocess, images)
-	images = get_images()
-	preprocess(images[-1])
+	with concurrent.futures.ProcessPoolExecutor() as executor:
+		images = get_images()
+		results = executor.map(preprocess, images)
+		# executor.shutdown(wait=True)
+		# augmented = executor.map(augmentation, images)
+	# images = get_images()
+	# preprocess(images[-1])
 
 		
 if __name__ == '__main__':
