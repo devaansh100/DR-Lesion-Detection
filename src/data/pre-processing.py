@@ -162,9 +162,11 @@ def normalize(img):
 	return imgNorm
 
 def preprocess(image):
-	#In case the image passed is a .DS_Store
+	#In case the file passed is a .DS_Store
 	if 'DS' in image:
 		return 0
+
+	#Read image into a numpy array
 	img = cv2.imread(image, -1)[:,:,1]
 
 	#Resize the image and make the background white
@@ -176,15 +178,19 @@ def preprocess(image):
 	#Cropping the extra edges
 	img = normalize(img)
 
-	# img = accentuate(img)	
-	# cv2.imshow(image, img)
-	cv2.imshow(image,img)
-	cv2.waitKey()
-	cv2.destroyAllWindows()
+	#save image
+	cv2.imwrite('/Users/devaanshgupta/Desktop/PS-I/DR-Lesion-Detection/data/preprocessed/' + image, img)
+
+	return 1
+
+	#Display image. Only for testing
+	# cv2.imshow(image,img)
+	# cv2.waitKey()
+	# cv2.destroyAllWindows()
 
 
 def main():
-	with concurrent.futures.ProcessPoolExecutor() as executor:
+	with concurrent.futures.ThreadPoolExecutor() as executor:
 		images = get_images()
 		results = executor.map(preprocess, images)
 		# executor.shutdown(wait=True)
