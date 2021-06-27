@@ -4,11 +4,10 @@ import numpy as np
 import os
 import concurrent.futures
 from imutils import contours
-from skimage import measure
 import imutils
 from tqdm import tqdm
 import random
-
+import csv
 
 def get_images():
 	'''Gets image names from the images directory'''
@@ -16,6 +15,27 @@ def get_images():
 	os.chdir('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_001/')
 	images = os.listdir() #starting from 1 to avoid the .DS_Store
 	return images
+
+def get_images_to_augment(label):
+	'''Gets image names of images to augment with the passed label. Also returns the number of augmentations per image'''
+	# file = open('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/trainLabels.csv')
+	file = open('/Users/devaanshgupta/Downloads/trainLabels.csv')
+	entries = file.read().split('\n')
+	entries = [entry.split(',') for entry in entries]
+	labels = [entries[x][1] for x in range(1, len(entries)-1)]
+	nImages,_,_ = plt.hist(labels, 5, facecolor='blue', alpha = 0.5)
+	# Label distribution for reference
+	# [25810.,  2443.,  5292.,   708.,   873.]
+	images = []
+	for i in range(1, len(entries) - 1):
+		if entries[i][1] == label:
+			images.append(entries[i][1])
+			if len(images) == nImages[label]:
+				break
+
+	return images, nAugmentations
+
+
 
 def mask(img):
 	'''Creates a mask for the image to remove outer black borders'''
@@ -34,6 +54,7 @@ def mask(img):
 	return maskedImg
 
 def crop_edges(img):
+	'''Crops the extra edges in the image'''
 	rows, cols = img.shape
 
 	#Finding the color of the edges
@@ -80,6 +101,7 @@ def crop_edges(img):
 	return img
 
 def remove_optic_disc(img):
+	'''Detects optic disk centre and then provides thesholding to remove it'''
 
 	# Extracting the red channel of the image
 	imgR = img[:,:,2]
@@ -158,12 +180,14 @@ def remove_optic_disc(img):
 	return img
 
 def enhance(img):
+	'''Enhances the image'''
 	#Enhancing the contrast
 	clahe = cv2.createCLAHE(clipLimit = 3)
 	imgNorm = clahe.apply(img)
 	return imgNorm
 
 def preprocess(image):
+	'''Calls all the pre-processing steps'''
 	#In case the file passed is a .DS_Store
 	if 'DS' in image:
 		return 0
@@ -197,23 +221,27 @@ def preprocess(image):
 	# cv2.waitKey()
 	# cv2.destroyAllWindows()
 
-	def augmentation(images):
+def augmentation(images, nAugmentations):
+	'''Performs data augmentation on each image provided in a list'''
+
 	for image in images:
-		nAugmentations = 5
-		for _ in range(nAugmentations):
+		for i in range(nAugmentations):
 			try:
 				img = cv2.imread(image)
-				cv2.imwrite(image, img) #Add the image in the image code
+				if img.shape != (224, 224): #Size in consideration
+					img = cv2.resize(img, (224, 224), interpolation = cv2.INTER_CUBIC)
+					cv2.imwrite(image, img) #Add the image location in the image code
 			except:
 				continue
-			if img.shape != (224, 224):
-				img = cv2.resize(img, (224, 224), interpolation = cv2.INTER_CUBIC)
 
-			option = random.randint(1,2)
+			option = random.randint(1,3)
 			new_image = img
+			#Randomly choose to flip horizontally, vertically, or both
 			if option == 1:
 				flipCode = random.randint(-1, 1)
 				new_image = cv2.flip(img, flipCode)
+
+			#Rotate the image by a random angle
 			elif option == 2:
 				angle = random.random()*360
 				row,col = img.shape
@@ -221,15 +249,27 @@ def preprocess(image):
 				rot_mat = cv2.getRotationMatrix2D(center,angle,1.0)
 				new_image = cv2.warpAffine(image, rot_mat, (col,row))
 
+			#Convert to HSV 
+			# elif option == 3:
+			# 	imgHSV = cv2.cvtColor()
+
+			try:
+				#Saving the augmented image
+				cv2.imwrite(image + '-'+str(i), new_image)
+			except:
+				continue
+
 
 def main():
+	'''Creates a process for each image'''
 	with concurrent.futures.ThreadPoolExecutor() as executor:
 		images = get_images()
-		results = list(tqdm(executor.map(preprocess, images), total=len(images)))
-		# executor.shutdown(wait=True)
-		# augmented = executor.map(augmentation, images)
+		# results = list(tqdm(executor.map(preprocess, images), total=len(images)))
+		imagesToAugment, nAugmentations = get_images_to_augment()
+		augmented = executor.map(augmentation, imagesToAugment, nAugmentations)
 	# images = get_images()
 	# preprocess(images[-1])
+
 
 		
 if __name__ == '__main__':
