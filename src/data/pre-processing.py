@@ -221,7 +221,7 @@ def preprocess(image):
 	# cv2.waitKey()
 	# cv2.destroyAllWindows()
 
-def augmentation(images, nAugmentations):
+def augment(images, nAugmentations):
 	'''Performs data augmentation on each image provided in a list'''
 
 	for image in images:
@@ -264,12 +264,19 @@ def main():
 	'''Creates a process for each image'''
 	with concurrent.futures.ThreadPoolExecutor() as executor:
 		images = get_images()
+		
 		# results = list(tqdm(executor.map(preprocess, images), total=len(images)))
 		imagesToAugment, nAugmentations = get_images_to_augment()
-		augmented = executor.map(augmentation, imagesToAugment, nAugmentations)
+
+		#Image augmentation and pre-processing has been separated in order to understand the distribution after removing the poor quality images
+		augmented = executor.map(augment, imagesToAugment, nAugmentations)
 	# images = get_images()
 	# preprocess(images[-1])
 
+	# Step 1: Categorise the images as good and poor and remove the poor images
+	# Step 2: Find the distribution again
+	# Step 3: Get 15000 images which don't have DR, 15000 images which do have DR - augment each grade accordingly. If the number required is too high, add more augmentation methods
+	# Step 4: Finalise the size and the number of channels that would be required, modify each code accordingly
 
 		
 if __name__ == '__main__':
