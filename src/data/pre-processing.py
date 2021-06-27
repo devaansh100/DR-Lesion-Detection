@@ -6,12 +6,14 @@ import concurrent.futures
 from imutils import contours
 from skimage import measure
 import imutils
+from tqdm import tqdm
+import random
 
 
 def get_images():
 	'''Gets image names from the images directory'''
 
-	os.chdir('../../data/train/')
+	os.chdir('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_001/')
 	images = os.listdir() #starting from 1 to avoid the .DS_Store
 	return images
 
@@ -155,7 +157,7 @@ def remove_optic_disc(img):
 
 	return img
 
-def normalize(img):
+def enhance(img):
 	#Enhancing the contrast
 	clahe = cv2.createCLAHE(clipLimit = 3)
 	imgNorm = clahe.apply(img)
@@ -167,7 +169,11 @@ def preprocess(image):
 		return 0
 
 	#Read image into a numpy array
-	img = cv2.imread(image, -1)[:,:,1]
+	try:
+		img = cv2.imread(image, -1)[:,:,1]
+	except:
+		print(f'Reading error in image {image}')
+		return 0
 
 	#Resize the image and make the background white
 	img = mask(img)
@@ -176,10 +182,13 @@ def preprocess(image):
 	img = crop_edges(img)
 
 	#Cropping the extra edges
-	img = normalize(img)
+	img = enhance(img)
 
 	#save image
-	cv2.imwrite('/Users/devaanshgupta/Desktop/PS-I/DR-Lesion-Detection/data/preprocessed/' + image, img)
+	try:
+		cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed_001/' + image, img)
+	except:
+		print(f'Writing error in image {image}')
 
 	return 1
 
@@ -188,11 +197,10 @@ def preprocess(image):
 	# cv2.waitKey()
 	# cv2.destroyAllWindows()
 
-
 def main():
 	with concurrent.futures.ThreadPoolExecutor() as executor:
 		images = get_images()
-		results = executor.map(preprocess, images)
+		results = list(tqdm(executor.map(preprocess, images), total=len(images)))
 		# executor.shutdown(wait=True)
 		# augmented = executor.map(augmentation, images)
 	# images = get_images()
