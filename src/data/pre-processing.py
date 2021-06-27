@@ -197,6 +197,31 @@ def preprocess(image):
 	# cv2.waitKey()
 	# cv2.destroyAllWindows()
 
+	def augmentation(images):
+	for image in images:
+		nAugmentations = 5
+		for _ in range(nAugmentations):
+			try:
+				img = cv2.imread(image)
+				cv2.imwrite(image, img) #Add the image in the image code
+			except:
+				continue
+			if img.shape != (224, 224):
+				img = cv2.resize(img, (224, 224), interpolation = cv2.INTER_CUBIC)
+
+			option = random.randint(1,2)
+			new_image = img
+			if option == 1:
+				flipCode = random.randint(-1, 1)
+				new_image = cv2.flip(img, flipCode)
+			elif option == 2:
+				angle = random.random()*360
+				row,col = img.shape
+				center = tuple(np.array([row,col])/2)
+				rot_mat = cv2.getRotationMatrix2D(center,angle,1.0)
+				new_image = cv2.warpAffine(image, rot_mat, (col,row))
+
+
 def main():
 	with concurrent.futures.ThreadPoolExecutor() as executor:
 		images = get_images()
