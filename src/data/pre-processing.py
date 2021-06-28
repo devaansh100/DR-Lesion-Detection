@@ -293,7 +293,7 @@ def augment(image, nAugmentations):
 
 		try:
 			#Saving the augmented image
-			cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/augmented/' + image + '-'+str(i+1)+'.jpeg', new_image)
+			cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/' + image + '-'+str(i+1)+'.jpeg', new_image)
 			# cv2.imwrite(image.replace('.jpeg','') + '-'+str(i+1)+'.jpeg', new_image)
 
 		except:
