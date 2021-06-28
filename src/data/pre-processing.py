@@ -8,16 +8,16 @@ import imutils
 from tqdm import tqdm
 import random
 import csv
+from skimage.util import random_noise
 
 def get_images():
 	'''Gets image names from the images directory'''
 
 	os.chdir('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train/')
-	# os.chdir('/Users/devaanshgupta/Desktop/PS-I/DR-Lesion-Detection/data/train/')
 	images = os.listdir() #starting from 1 to avoid the .DS_Store
 	return images
 
-def get_images_to_augment():
+def get_images_distribution():
 	'''Gets image names of images to augment with the passed label'''
 	# file = open('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/trainLabels.csv')
 	file = open('/Users/devaanshgupta/Downloads/trainLabels.csv')
@@ -37,64 +37,88 @@ def get_images_to_augment():
 
 def mask(img):
 	'''Creates a mask for the image to remove outer black borders'''
-
+	if img is None:
+		return None
 	#Converting from BGR to RGB
-	maskedImg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+	try:
+		maskedImg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+	except:
+		return None
 
 	#Resizing the image
 	maskedImg = cv2.resize(maskedImg, (224,224))
 
 	#Creating the mask. Remove black pixels and change to white pixels
-	maskedImg = cv2.addWeighted(maskedImg,4, cv2.GaussianBlur(maskedImg , (0,0) , 30) ,-4 ,128)
+	maskedImg = cv2.addWeighted(maskedImg,4, cv2.GaussianBlur(maskedImg , (0,0) , 25) ,-4 ,128)
 
 	return maskedImg
 
-def crop_edges(img):
+def crop_edges(img, tol = 7):
 	'''Crops the extra edges in the image'''
-	rows, cols, _ = img.shape
+	
+	if img.ndim == 2:
+		mask = img > tol
+		return img[np.ix_(mask.any(1),mask.any(0))]
+	# If we have a normal RGB images
+	elif img.ndim == 3:
+		gray_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+		mask = gray_img > tol
+		
+		check_shape = img[:,:,0][np.ix_(mask.any(1),mask.any(0))].shape[0]
+		if (check_shape == 0): # image is too dark so that we crop out everything,
+			return img # return original image
+		else:
+			img1=img[:,:,0][np.ix_(mask.any(1),mask.any(0))]
+			img2=img[:,:,1][np.ix_(mask.any(1),mask.any(0))]
+			img3=img[:,:,2][np.ix_(mask.any(1),mask.any(0))]
+			img = np.stack([img1,img2,img3],axis=-1)
+		return img
 
-	#Finding the color of the edges
-	borderColor = img[0,0]
-	top = 0
-	bottom = 0
-	left = 0
-	right = 0
 
-	#Finding the edges where the fundus image starts
-	for col in range(0, cols):
-		if not np.all(img[:,col, :] == borderColor):
-			left = col - 5
-			break
+# def remove_extra_edges(img, channel):
 
-	for col in range(0, cols):
-		if not np.all(img[:,-col, :] == borderColor):
-			right = cols - (col - 5)
-			break
+# 	rows, cols, _ = img.shape
+# 	#Finding the color of the edges
+# 	borderColor = 0
+# 	top = 0
+# 	bottom = 0
+# 	left = 0
+# 	right = 0
 
-	for row in range(0, rows):
-		if not np.all(img[row,:, :] == borderColor):
-			top = row - 5
-			break
+# 	#Finding the edges where the fundus image starts
+# 	for col in range(0, cols):
+# 		if not np.all(img[:,col, channel] == borderColor):
+# 			left = col - 2
+# 			break
 
-	for row in range(0, rows):
-		if not np.all(img[-row,:, :] == borderColor):
-			bottom = rows - (row - 5)
-			break
+# 	for col in range(0, cols):
+# 		if not np.all(img[:,-col, channel] == borderColor):
+# 			right = cols - (col - 2)
+# 			break
 
-	#In case there is no extra edge
-	if left < 0:
-		left = 0
-	if right > cols:
-		right = cols
-	if top < 0:
-		top = 0
-	if bottom < rows:
-		bottom = rows
+# 	for row in range(0, rows):
+# 		if not np.all(img[row,:, channel] == borderColor):
+# 			top = row - 2
+# 			break
 
-	#Cropping the images to remove extra edges
-	img = img[top:bottom, left:right, :]
+# 	for row in range(0, rows):
+# 		if not np.all(img[-row,:, channel] == borderColor):
+# 			bottom = rows - (row - 2)
+# 			break
 
-	return img
+# 	#In case there is no extra edge
+# 	if left < 0:
+# 		left = 0
+# 	if right > cols:
+# 		right = cols
+# 	if top < 0:
+# 		top = 0
+# 	if bottom > rows:
+# 		bottom = rows
+
+# 	img = img[top:bottom, left:right]
+
+# 	return img
 
 def remove_optic_disc(img):
 	'''Detects optic disk centre and then provides thesholding to remove it'''
@@ -199,18 +223,20 @@ def preprocess(image):
 		print(f'Reading error in image {image}')
 		return 0
 
-	#Resize the image and make the background white
-	img = mask(img)
-
 	#Cropping the extra edges
 	img = crop_edges(img)
+
+	#Resize the image and make the background white
+	img = mask(img)
 
 	#Add condition for image of size zero
 
 	#save image
 	try:
-		cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/' + image, img)
-		# cv2.imwrite('/Users/devaanshgupta/Desktop/PS-I/DR-Lesion-Detection/data/preprocessed/' + image, img)
+		if img is not None:
+			cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/' + image, img)
+		else:
+			print(f'{image} is None')
 	except:
 		print(f'Writing error in image {image}')
 
@@ -221,57 +247,75 @@ def preprocess(image):
 	# cv2.waitKey()
 	# cv2.destroyAllWindows()
 
-def augment(images, nAugmentations):
+def augment(image, nAugmentations):
 	'''Performs data augmentation on each image provided in a list'''
 
-	for image in images:
-		for i in range(nAugmentations):
-			try:
-				img = cv2.imread(image)
-				if img.shape != (224, 224): #Size in consideration
-					img = cv2.resize(img, (224, 224), interpolation = cv2.INTER_CUBIC)
-					cv2.imwrite(image, img) #Add the image location in the image code
-			except:
-				continue
+	for i in range(nAugmentations):
+		try:
+			img = cv2.imread(image)
+		except:
+			continue
 
-			option = random.randint(1,3)
-			new_image = img
-			#Randomly choose to flip horizontally, vertically, or both
-			if option == 1:
-				flipCode = random.randint(-1, 1)
-				new_image = cv2.flip(img, flipCode)
+		option = random.randint(1,4)
+		new_image = img
+		#Randomly choose to flip horizontally, vertically, or both
+		if option == 1:
+			flipCode = random.randint(-1, 1)
+			new_image = cv2.flip(img, flipCode)
 
-			#Rotate the image by a random angle
-			elif option == 2:
-				angle = random.random()*360
-				row,col = img.shape
-				center = tuple(np.array([row,col])/2)
-				rot_mat = cv2.getRotationMatrix2D(center,angle,1.0)
-				new_image = cv2.warpAffine(image, rot_mat, (col,row))
+		#Rotate the image by a random angle
+		elif option == 2:
+			angle = random.random()*360
+			row,col = img.shape
+			center = tuple(np.array([row,col])/2)
+			rot_mat = cv2.getRotationMatrix2D(center,angle,1.0)
+			new_image = cv2.warpAffine(image, rot_mat, (col,row))
 
-			#Convert to HSV 
-			elif option == 3:
-				new_image = enhance(img)
+		#Enhance the image by the CLAHE operator 
+		elif option == 3:
+			new_image = enhance(img)
 
-			try:
-				#Saving the augmented image
-				cv2.imwrite(image + '-'+str(i), new_image)
-			except:
-				continue
+		#Add Gaussian noise
+		elif option == 4:
+			new_image = skimage.util.random_noise(img, mode = 'gaussian', seed = None, clip = True, **kwargs)
+
+		try:
+			#Saving the augmented image
+			cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/' + image + '-'+str(i+1), new_image)
+		except:
+			continue
 
 
 def main():
 	'''Creates a thread for each image'''
 	with concurrent.futures.ThreadPoolExecutor() as executor:
-		images = get_images()
+		
+		# Pre-processing all training images
+		# images = get_images()
+		# results = list(tqdm(executor.map(preprocess, images), total=len(images)))
 
-		results = list(tqdm(executor.map(preprocess, images), total=len(images)))
-		# imagesToAugment = get_images_to_augment()
+		#Augmenting all pre-processed images
+		imageDistribution = get_images_distribution()
+		nAugmentations = [0, 1, 0, 6, 5]
+		os.chdir('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/')
+		augmented1 = list(tqdm(executor.map(augment, imageDistribution[1], nAugmentations[1]), total=len(imageDistribution[1])))
+		augmented3 = list(tqdm(executor.map(augment, imageDistribution[3], nAugmentations[3]), total=len(imageDistribution[3]))) 
+		augmented4 = list(tqdm(executor.map(augment, imageDistribution[4], nAugmentations[4]), total=len(imageDistribution[4]))) 
 
-		#Image augmentation and pre-processing has been separated in order to understand the distribution after removing the poor quality images
-		# augmented = executor.map(augment, imagesToAugment, nAugmentations)
-	# images = get_images()
-	# preprocess(images[-1])
+		#Adding the new images into the distribution
+		for label in imageDistribution:
+			for image in imageDistribution[label]:
+				for i in range(0, nAugmentations[label]):
+					imageDistribution[label].append(image + '-' + str(i+1))
+		
+
+
+	# Label distribution  - [25810, 2443, 5292, 708, 873]
+	# Distruibution of nAugmentations - [0, 1, 0, 6, 5]
+	# Total data distribution - [25810, 4886, 5292, 4956, 5238]
+	# Distribution in training - [20648, 3909, 4234, 3965, 4190]
+	# Distribution in validation - [5162, 977, 1058,  991, 1048]
+
 
 	# Step 1: Categorise the images as good and poor and remove the poor images(should we do this? I mean the model is based on the fact that we want to work with poor quality images as well). If yes, how?
 	# Step 2: Find the distribution again
