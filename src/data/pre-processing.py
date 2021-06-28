@@ -28,7 +28,7 @@ def get_images_distribution():
 
 	images = {0: [], 1: [], 2: [], 3: [], 4: []}
 	for i in range(1, len(entries) - 1):
-		label = entries[i][1]
+		label = int(entries[i][1])
 		images[label].append(entries[i][0])
 
 	return images
@@ -234,7 +234,9 @@ def preprocess(image):
 	#save image
 	try:
 		if img is not None:
-			cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/' + image, img)
+			# cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/' + image, img)
+			img = cv2.imread(image)
+
 		else:
 			print(f'{image} is None')
 	except:
@@ -249,15 +251,19 @@ def preprocess(image):
 
 def augment(image, nAugmentations):
 	'''Performs data augmentation on each image provided in a list'''
+	try:
+		img = cv2.imread('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/' + image + '.jpeg')
+		if img is None:
+			print(f'{image} is not of type None')
+	except:
+		return 0
 
 	for i in range(nAugmentations):
-		try:
-			img = cv2.imread(image)
-		except:
-			continue
 
 		option = random.randint(1,4)
 		new_image = img
+		
+
 		#Randomly choose to flip horizontally, vertically, or both
 		if option == 1:
 			flipCode = random.randint(-1, 1)
@@ -266,10 +272,13 @@ def augment(image, nAugmentations):
 		#Rotate the image by a random angle
 		elif option == 2:
 			angle = random.random()*360
-			row,col = img.shape
+			row,col,_ = img.shape
 			center = tuple(np.array([row,col])/2)
 			rot_mat = cv2.getRotationMatrix2D(center,angle,1.0)
-			new_image = cv2.warpAffine(image, rot_mat, (col,row))
+			new_image0 = cv2.warpAffine(img[:,:,0], rot_mat, (col,row))
+			new_image1 = cv2.warpAffine(img[:,:,1], rot_mat, (col,row))
+			new_image2 = cv2.warpAffine(img[:,:,2], rot_mat, (col,row))
+			new_image = np.stack((new_image0, new_image1, new_image2), axis = -1)
 
 		#Enhance the image by the CLAHE operator 
 		elif option == 3:
@@ -277,24 +286,30 @@ def augment(image, nAugmentations):
 
 		#Add Gaussian noise
 		elif option == 4:
-			new_image = skimage.util.random_noise(img, mode = 'gaussian', seed = None, clip = True, **kwargs)
+			noises = ['gaussian', 'poisson', 'speckle', 's&p']
+			noise = random.choice(noises)
+			new_image = random_noise(img, mode = noise, seed = None, clip = True)
+			new_image = new_image*255
 
 		try:
 			#Saving the augmented image
-			cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/' + image + '-'+str(i+1), new_image)
+			cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/augmented/' + image + '-'+str(i+1)+'.jpeg', new_image)
+			# cv2.imwrite(image.replace('.jpeg','') + '-'+str(i+1)+'.jpeg', new_image)
+
 		except:
 			continue
+	return 1
 
 def divide_dataset(dist):
 
-	ntraining = [20648, 3909, 4234, 3965, 4190]
-	nValidation = [5162, 977, 1058,  991, 1048]
+	ntraining = [20648, 3909, 4234, 4190, 3965]
+	nValidation = [5162, 977, 1058,  1048, 991]
 
 	training = {0: [], 1: [], 2: [], 3: [], 4: []}
 	validation = {0: [], 1: [], 2: [], 3: [], 4: []}
 
 	for label in dist:
-		dist[label] = random.shuffle(dist[label])
+		random.shuffle(dist[label])
 		training[label] = dist[label][0:ntraining[label]]
 		validation[label] = dist[label][-nValidation[label]:]
 
@@ -305,57 +320,57 @@ def main():
 	with concurrent.futures.ThreadPoolExecutor() as executor:
 		
 		# Pre-processing all training images
-		# images = get_images()
-		# results = list(tqdm(executor.map(preprocess, images), total=len(images)))
+		images = get_images()
+		results = list(tqdm(executor.map(preprocess, images), total=len(images)))
 
 		#Augmenting all pre-processed images
 		imageDistribution = get_images_distribution()
-		nAugmentations = [0, 1, 0, 6, 5]
-		os.chdir('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/')
-		augmented1 = list(tqdm(executor.map(augment, imageDistribution[1], nAugmentations[1]), total=len(imageDistribution[1])))
-		augmented3 = list(tqdm(executor.map(augment, imageDistribution[3], nAugmentations[3]), total=len(imageDistribution[3]))) 
-		augmented4 = list(tqdm(executor.map(augment, imageDistribution[4], nAugmentations[4]), total=len(imageDistribution[4]))) 
-
-		#Adding the new images into the distribution
+		nAugmentations = [0, 1, 0, 5, 6]
+		augmented1 = list(tqdm(executor.map(augment, imageDistribution[1], [nAugmentations[1] for _ in range(0, len(imageDistribution[1]))]), total=len(imageDistribution[1])))
+		augmented3 = list(tqdm(executor.map(augment, imageDistribution[3], [nAugmentations[3] for _ in range(0, len(imageDistribution[3]))]), total=len(imageDistribution[3]))) 
+		augmented4 = list(tqdm(executor.map(augment, imageDistribution[4], [nAugmentations[4] for _ in range(0, len(imageDistribution[4]))]), total=len(imageDistribution[4]))) 
+		# Adding the new images into the distribution
 		for label in imageDistribution:
-			for image in imageDistribution[label]:
-				for i in range(0, nAugmentations[label]):
-					imageDistribution[label].append(image + '-' + str(i+1))
-
+			if label == 1 or label == 3 or label == 4:
+				length = len(imageDistribution[label])
+				for i in range(0, length):
+					for j in range(0, nAugmentations[label]):
+						imageDistribution[label].append(imageDistribution[label][i] + '-' + str(j+1))
 		'''
-		Label distribution  - [25810, 2443, 5292, 708, 873]
-		Distruibution of nAugmentations - [0, 1, 0, 6, 5]
-		Total data distribution - [25810, 4886, 5292, 4956, 5238]
-		Distribution in training - [20648, 3909, 4234, 3965, 4190]
-		Distribution in validation - [5162, 977, 1058,  991, 1048]
+		Label distribution  - [25810, 2443, 5292, 873, 708]
+		Distruibution of nAugmentations - [0, 1, 0, 5, 6]
+		Total data distribution - [25810, 4886, 5292, 5238, 4956]
+		Distribution in training - [20648, 3909, 4234, 4190, 3965]
+		Distribution in validation - [5162, 977, 1058, 1048, 991]
 		'''
 		#Dividing dataset into training and validation set
 		trainingData, validationData = divide_dataset(imageDistribution)
 
 		#Saving the labels in training.csv
-		with training open('trainingLabels.csv',w):
-			training.writerow(['img-code', 'class'])
-			for label in training:
-				for image in training[label]:
-					training.writerow([image, label])
+		with open('trainingLabels.csv','w') as training:
+			trainingWriter = csv.writer(training)
+			trainingWriter.writerow(['img-code', 'class'])
+			for label in trainingData:
+				for image in trainingData[label]:
+					trainingWriter.writerow([image, label])
 
 		#Saving the labels in training.csv
-		with validation open('validationLabels.csv',w):
-			validation.writerow(['img-code', 'class'])
-			for label in validation:
-				for image in validation[label]:
-					validation.writerow([image, label])
+		with open('validationLabels.csv','w') as validation:
+			validationWriter = csv.writer(validation)
+			validationWriter.writerow(['img-code', 'class'])
+			for label in validationData:
+				for image in validationData[label]:
+					validationWriter.writerow([image, label])
 
-		#Moving the files to separate test and validation folders
+		# #Moving the files into separate test and validation folders
+		for label in validationData:
+			for image in validationData[label]:
+				try:
+					os.rename('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/'+image + '.jpeg', '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/validation/'+image+'.jpeg')
+				except:
+					print(f'Issue in {image}')
 
-
-	# Step 1: Categorise the images as good and poor and remove the poor images(should we do this? I mean the model is based on the fact that we want to work with poor quality images as well). If yes, how?
-	# Step 2: Find the distribution again
-	# Step 3: Get 15000 images which don't have DR, 15000 images which do have DR - augment each grade accordingly. If the number required is too high, add more augmentation methods
-	# Step 4: Finalise the size and the number of channels that would be required, modify each code accordingly
-	# Step 5: Ensure that the division into training and validation is done correctly
-	# Step 6: I was going to use Resnet but not many people have really used that one. Going with the efficient net model - need 3 color channels and a specific size. Aso, will probably have to retrain that model since pre-trained isnt available. Will check if I should use weights from imagenet or not
-	# Step 7: The pre-processing will have to be done as per this, also adding gaussian noise to all colour channels was giving good sitnct features.
+		#Post this, rename the folder named 'preprocessing' to 'validation'
 		
 if __name__ == '__main__':
 	main()
