@@ -74,7 +74,7 @@ def crop_edges(img, tol = 7):
 			img = np.stack([img1,img2,img3],axis=-1)
 		return img
 
-
+#Compare with the new cropping method
 # def remove_extra_edges(img, channel):
 
 # 	rows, cols, _ = img.shape
@@ -285,6 +285,20 @@ def augment(image, nAugmentations):
 		except:
 			continue
 
+def divide_dataset(dist):
+
+	ntraining = [20648, 3909, 4234, 3965, 4190]
+	nValidation = [5162, 977, 1058,  991, 1048]
+
+	training = {0: [], 1: [], 2: [], 3: [], 4: []}
+	validation = {0: [], 1: [], 2: [], 3: [], 4: []}
+
+	for label in dist:
+		dist[label] = random.shuffle(dist[label])
+		training[label] = dist[label][0:ntraining[label]]
+		validation[label] = dist[label][-nValidation[label]:]
+
+	return training, validation
 
 def main():
 	'''Creates a thread for each image'''
@@ -307,14 +321,32 @@ def main():
 			for image in imageDistribution[label]:
 				for i in range(0, nAugmentations[label]):
 					imageDistribution[label].append(image + '-' + str(i+1))
-		
 
+		'''
+		Label distribution  - [25810, 2443, 5292, 708, 873]
+		Distruibution of nAugmentations - [0, 1, 0, 6, 5]
+		Total data distribution - [25810, 4886, 5292, 4956, 5238]
+		Distribution in training - [20648, 3909, 4234, 3965, 4190]
+		Distribution in validation - [5162, 977, 1058,  991, 1048]
+		'''
+		#Dividing dataset into training and validation set
+		trainingData, validationData = divide_dataset(imageDistribution)
 
-	# Label distribution  - [25810, 2443, 5292, 708, 873]
-	# Distruibution of nAugmentations - [0, 1, 0, 6, 5]
-	# Total data distribution - [25810, 4886, 5292, 4956, 5238]
-	# Distribution in training - [20648, 3909, 4234, 3965, 4190]
-	# Distribution in validation - [5162, 977, 1058,  991, 1048]
+		#Saving the labels in training.csv
+		with training open('trainingLabels.csv',w):
+			training.writerow(['img-code', 'class'])
+			for label in training:
+				for image in training[label]:
+					training.writerow([image, label])
+
+		#Saving the labels in training.csv
+		with validation open('validationLabels.csv',w):
+			validation.writerow(['img-code', 'class'])
+			for label in validation:
+				for image in validation[label]:
+					validation.writerow([image, label])
+
+		#Moving the files to separate test and validation folders
 
 
 	# Step 1: Categorise the images as good and poor and remove the poor images(should we do this? I mean the model is based on the fact that we want to work with poor quality images as well). If yes, how?
