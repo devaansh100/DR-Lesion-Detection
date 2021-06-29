@@ -319,8 +319,8 @@ def main():
 	with concurrent.futures.ThreadPoolExecutor() as executor:
 		
 		# Pre-processing all training images
-		# images = get_images()
-		# results = list(tqdm(executor.map(preprocess, images), total=len(images)))
+		images = get_images()
+		results = list(tqdm(executor.map(preprocess, images), total=len(images)))
 
 		'''
 		Label distribution  - [25809, 2443, 5292, 873, 708]
