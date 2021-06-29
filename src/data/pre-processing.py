@@ -283,7 +283,7 @@ def augment(image, nAugmentations):
 		elif option == 3:
 			new_image = enhance(img)
 
-		#Add Gaussian noise
+		#Add noise
 		elif option == 4:
 			noises = ['gaussian', 'poisson', 'speckle', 's&p']
 			noise = random.choice(noises)
