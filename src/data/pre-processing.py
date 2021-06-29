@@ -33,8 +33,6 @@ def get_images_distribution():
 
 	return images
 
-
-
 def mask(img):
 	'''Creates a mask for the image to remove outer black borders'''
 	if img is None:
@@ -252,9 +250,10 @@ def preprocess(image):
 def augment(image, nAugmentations):
 	'''Performs data augmentation on each image provided in a list'''
 	try:
-		img = cv2.imread('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/' + image + '.jpeg')
+		img = cv2.imread('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_preprocessed/' + image + '.jpeg')
 		if img is None:
-			print(f'{image} is not of type None')
+			print(f'{image} is of type None')
+			return 0
 	except:
 		return 0
 
@@ -293,7 +292,7 @@ def augment(image, nAugmentations):
 
 		try:
 			#Saving the augmented image
-			cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/' + image + '-'+str(i+1)+'.jpeg', new_image)
+			cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_preprocessed/' + image + '-'+str(i+1)+'.jpeg', new_image)
 			# cv2.imwrite(image.replace('.jpeg','') + '-'+str(i+1)+'.jpeg', new_image)
 
 		except:
@@ -302,8 +301,8 @@ def augment(image, nAugmentations):
 
 def divide_dataset(dist):
 
-	ntraining = [20648, 3909, 4234, 4190, 3965]
-	nValidation = [5162, 977, 1058,  1048, 991]
+	ntraining = [20648, 1955, 4234, 699, 567]
+	nValidation = [5161, 488, 1058, 174, 141]
 
 	training = {0: [], 1: [], 2: [], 3: [], 4: []}
 	validation = {0: [], 1: [], 2: [], 3: [], 4: []}
@@ -320,34 +319,39 @@ def main():
 	with concurrent.futures.ThreadPoolExecutor() as executor:
 		
 		# Pre-processing all training images
-		images = get_images()
-		results = list(tqdm(executor.map(preprocess, images), total=len(images)))
+		# images = get_images()
+		# results = list(tqdm(executor.map(preprocess, images), total=len(images)))
 
-		#Augmenting all pre-processed images
-		imageDistribution = get_images_distribution()
-		nAugmentations = [0, 1, 0, 5, 6]
-		augmented1 = list(tqdm(executor.map(augment, imageDistribution[1], [nAugmentations[1] for _ in range(0, len(imageDistribution[1]))]), total=len(imageDistribution[1])))
-		augmented3 = list(tqdm(executor.map(augment, imageDistribution[3], [nAugmentations[3] for _ in range(0, len(imageDistribution[3]))]), total=len(imageDistribution[3]))) 
-		augmented4 = list(tqdm(executor.map(augment, imageDistribution[4], [nAugmentations[4] for _ in range(0, len(imageDistribution[4]))]), total=len(imageDistribution[4]))) 
-		# Adding the new images into the distribution
-		for label in imageDistribution:
-			if label == 1 or label == 3 or label == 4:
-				length = len(imageDistribution[label])
-				for i in range(0, length):
-					for j in range(0, nAugmentations[label]):
-						imageDistribution[label].append(imageDistribution[label][i] + '-' + str(j+1))
 		'''
-		Label distribution  - [25810, 2443, 5292, 873, 708]
+		Label distribution  - [25809, 2443, 5292, 873, 708]
+		Distribution in training before augmentation - [20648,  1955,  4234,   699,   567]
 		Distruibution of nAugmentations - [0, 1, 0, 5, 6]
-		Total data distribution - [25810, 4886, 5292, 5238, 4956]
-		Distribution in training - [20648, 3909, 4234, 4190, 3965]
-		Distribution in validation - [5162, 977, 1058, 1048, 991]
+		Distribution in training after augmentation - [20648,  3910,  4234,  4194,  3969]
+		Distribution in validation - [5161,  488, 1058,  174,  141]
 		'''
+		
+		imageDistribution = get_images_distribution()
+
 		#Dividing dataset into training and validation set
 		trainingData, validationData = divide_dataset(imageDistribution)
+		
+		#Augmenting images in training dataset
+		nAugmentations = [0, 1, 0, 5, 6]
+		augmented1 = list(tqdm(executor.map(augment, trainingData[1], [nAugmentations[1] for _ in range(0, len(trainingData[1]))]), total=len(trainingData[1])))
+		augmented3 = list(tqdm(executor.map(augment, trainingData[3], [nAugmentations[3] for _ in range(0, len(trainingData[3]))]), total=len(trainingData[3]))) 
+		augmented4 = list(tqdm(executor.map(augment, trainingData[4], [nAugmentations[4] for _ in range(0, len(trainingData[4]))]), total=len(trainingData[4]))) 
+		
+		# Adding the new augmented images into the training data distribution
+		for label in trainingData:
+			if label == 1 or label == 3 or label == 4:
+				length = len(trainingData[label])
+				for i in range(0, length):
+					for j in range(0, nAugmentations[label]):
+						trainingData[label].append(trainingData[label][i] + '-' + str(j+1))
+
 
 		#Saving the labels in training.csv
-		with open('trainingLabels.csv','w') as training:
+		with open('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/trainingLabels.csv','w') as training:
 			trainingWriter = csv.writer(training)
 			trainingWriter.writerow(['img-code', 'class'])
 			for label in trainingData:
@@ -355,7 +359,7 @@ def main():
 					trainingWriter.writerow([image, label])
 
 		#Saving the labels in training.csv
-		with open('validationLabels.csv','w') as validation:
+		with open('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/validationLabels.csv','w') as validation:
 			validationWriter = csv.writer(validation)
 			validationWriter.writerow(['img-code', 'class'])
 			for label in validationData:
@@ -366,7 +370,7 @@ def main():
 		for label in validationData:
 			for image in validationData[label]:
 				try:
-					os.rename('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/preprocessed/'+image + '.jpeg', '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/validation/'+image+'.jpeg')
+					os.rename('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_preprocessed/'+image + '.jpeg', '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/validation_preprocessed/'+image+'.jpeg')
 				except:
 					print(f'Issue in {image}')
 
