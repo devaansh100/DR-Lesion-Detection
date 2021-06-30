@@ -1,17 +1,17 @@
 import os
 import matplotlib.pyplot as plt
 
-dataPath = '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/'
+data_path = '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/'
 def get_images():
 	'''Gets image names from the images directory'''
 
-	os.chdir(dataPath + 'train_data_unzip/train/')
+	os.chdir(data_path + 'train_data_unzip/train/')
 	images = os.listdir() #starting from 1 to avoid the .DS_Store
 	return images
 
 def get_images_distribution():
 	'''Gets image names of images to augment with the passed label'''
-	file = open(dataPath + 'trainLabels.csv')
+	file = open(data_path + 'trainLabels.csv')
 	entries = file.read().split('\n')
 	entries = [entry.split(',') for entry in entries]
 	labels = [entries[x][1] for x in range(1, len(entries)-1)]

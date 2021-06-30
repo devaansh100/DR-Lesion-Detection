@@ -20,8 +20,8 @@ def augment(image, nAugmentations):
 
 		#Randomly choose to flip horizontally, vertically, or both
 		if option == 1:
-			flipCode = random.randint(-1, 1)
-			new_image = cv2.flip(img, flipCode)
+			flip_code = random.randint(-1, 1)
+			new_image = cv2.flip(img, flip_code)
 
 		#Rotate the image by a random angle
 		elif option == 2:
@@ -29,19 +29,19 @@ def augment(image, nAugmentations):
 			row,col,_ = img.shape
 			center = tuple(np.array([row,col])/2)
 			rot_mat = cv2.getRotationMatrix2D(center,angle,1.0)
-			new_image0 = cv2.warpAffine(img[:,:,0], rot_mat, (col,row))
-			new_image1 = cv2.warpAffine(img[:,:,1], rot_mat, (col,row))
-			new_image2 = cv2.warpAffine(img[:,:,2], rot_mat, (col,row))
-			new_image = np.stack((new_image0, new_image1, new_image2), axis = -1)
+			new_image_0 = cv2.warpAffine(img[:,:,0], rot_mat, (col,row))
+			new_image_1 = cv2.warpAffine(img[:,:,1], rot_mat, (col,row))
+			new_image_2 = cv2.warpAffine(img[:,:,2], rot_mat, (col,row))
+			new_image = np.stack((new_image_0, new_image_1, new_image_2), axis = -1)
 
 		#Enhance the image by the CLAHE operator 
 		elif option == 3:
 			clahe = cv2.createCLAHE(clipLimit = 3)
-			new_imageR = clahe.apply(img[:,:,0])
-			new_imageG = clahe.apply(img[:,:,1])
-			new_imageB = clahe.apply(img[:,:,2])
+			new_image_r = clahe.apply(img[:,:,0])
+			new_image_g = clahe.apply(img[:,:,1])
+			new_image_n = clahe.apply(img[:,:,2])
 
-			new_image = np.stack((new_imageR, new_imageG, new_imageB), axis = -1)
+			new_image_ = np.stack((new_image_r, new_image_g, new_image_b), axis = -1)
 
 		#Add noise
 		elif option == 4:
@@ -59,11 +59,11 @@ def augment(image, nAugmentations):
 			continue
 	return 1
 
-def divide_dataset(dist, trainingDist, validationDist):
+def divide_dataset(dist, training_dist, validation_dist):
 	'''Divides the input distribution into a training and validation dataset'''
 
-	ntraining = trainingDist
-	nValidation = validationDist
+	ntraining = training_dist
+	nValidation = validation_dist
 
 	training = {0: [], 1: [], 2: [], 3: [], 4: []}
 	validation = {0: [], 1: [], 2: [], 3: [], 4: []}

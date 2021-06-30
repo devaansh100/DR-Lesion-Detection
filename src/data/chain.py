@@ -42,7 +42,7 @@ def preprocess(image):
 	return 1
 
 def main():
-	dataPath = '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/'
+	data_path = '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/'
 	'''Creates a thread for each image'''
 	with concurrent.futures.ThreadPoolExecutor() as executor:
 		
@@ -59,47 +59,47 @@ def main():
 		'''
 		
 		#Getting image distribution
-		imageDistribution = get_images_distribution()
+		image_distribution = get_images_distribution()
 
 		#Dividing dataset into training and validation set
-		trainingData, validationData = divide_dataset(imageDistribution, [20648, 1955, 4234, 699, 567], [5161, 488, 1058, 174, 141])
+		training_data, validation_data = divide_dataset(image_distribution, [20648, 1955, 4234, 699, 567], [5161, 488, 1058, 174, 141])
 		
 		#Augmenting images in training dataset
 		nAugmentations = [0, 1, 0, 5, 6]
-		augmented1 = list(tqdm(executor.map(augment, trainingData[1], [nAugmentations[1] for _ in range(0, len(trainingData[1]))]), total=len(trainingData[1])))
-		augmented3 = list(tqdm(executor.map(augment, trainingData[3], [nAugmentations[3] for _ in range(0, len(trainingData[3]))]), total=len(trainingData[3]))) 
-		augmented4 = list(tqdm(executor.map(augment, trainingData[4], [nAugmentations[4] for _ in range(0, len(trainingData[4]))]), total=len(trainingData[4]))) 
+		augmented1 = list(tqdm(executor.map(augment, training_data[1], [nAugmentations[1] for _ in range(0, len(training_data[1]))]), total=len(training_data[1])))
+		augmented3 = list(tqdm(executor.map(augment, training_data[3], [nAugmentations[3] for _ in range(0, len(training_data[3]))]), total=len(training_data[3]))) 
+		augmented4 = list(tqdm(executor.map(augment, training_data[4], [nAugmentations[4] for _ in range(0, len(training_data[4]))]), total=len(training_data[4]))) 
 		
 		# Adding the new augmented images into the training data distribution
-		for label in trainingData:
+		for label in training_data:
 			if label == 1 or label == 3 or label == 4:
-				length = len(trainingData[label])
+				length = len(training_data[label])
 				for i in range(0, length):
 					for j in range(0, nAugmentations[label]):
-						trainingData[label].append(trainingData[label][i] + '-' + str(j+1))
+						training_data[label].append(training_data[label][i] + '-' + str(j+1))
 
 
 		#Saving the labels in training.csv
-		with open(dataPath + 'trainingLabels.csv','w') as training:
-			trainingWriter = csv.writer(training)
-			trainingWriter.writerow(['img-code', 'class'])
-			for label in trainingData:
-				for image in trainingData[label]:
-					trainingWriter.writerow([image, label])
+		with open(data_path + 'trainingLabels.csv','w') as training:
+			training_writer = csv.writer(training)
+			training_writer.writerow(['img-code', 'class'])
+			for label in training_data:
+				for image in training_data[label]:
+					training_writer.writerow([image, label])
 
 		#Saving the labels in training.csv
-		with open(dataPath + 'validationLabels.csv','w') as validation:
-			validationWriter = csv.writer(validation)
-			validationWriter.writerow(['img-code', 'class'])
-			for label in validationData:
-				for image in validationData[label]:
-					validationWriter.writerow([image, label])
+		with open(data_path + 'validationLabels.csv','w') as validation:
+			validation_writer = csv.writer(validation)
+			validation_writer.writerow(['img-code', 'class'])
+			for label in validation_data:
+				for image in validation_data[label]:
+					validation_writer.writerow([image, label])
 
 		# #Moving the files into separate test and validation folders
-		for label in validationData:
-			for image in validationData[label]:
+		for label in validation_data:
+			for image in validation_data[label]:
 				try:
-					os.rename(dataPath + 'train_data_unzip/train_preprocessed/'+image + '.jpeg', dataPath + 'train_data_unzip/validation_preprocessed/'+image+'.jpeg')
+					os.rename(data_path + 'train_data_unzip/train_preprocessed/'+image + '.jpeg', data_path + 'train_data_unzip/validation_preprocessed/'+image+'.jpeg')
 				except:
 					print(f'Issue in {image}')
 		

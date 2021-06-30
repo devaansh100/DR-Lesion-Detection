@@ -9,17 +9,17 @@ def mask(img):
 		return None
 	#Converting from BGR to RGB
 	try:
-		maskedImg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+		masked_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 	except:
 		return None
 
 	#Resizing the image
-	maskedImg = cv2.resize(maskedImg, (224,224))
+	masked_img = cv2.resize(masked_img, (224,224))
 
 	#Creating the mask. Remove black pixels and change to white pixels
-	maskedImg = cv2.addWeighted(maskedImg,4, cv2.GaussianBlur(maskedImg , (0,0) , 25) ,-4 ,128)
+	masked_img = cv2.addWeighted(masked_img,4, cv2.GaussianBlur(masked_img , (0,0) , 25) ,-4 ,128)
 
-	return maskedImg
+	return masked_img
 
 def crop_edges(img, tol = 7):
 	'''Crops the extra edges in the image'''
@@ -46,12 +46,12 @@ def remove_optic_disc(img):
 	'''Detects optic disk centre and then provides thesholding to remove it'''
 
 	# Extracting the red channel of the image
-	imgR = img[:,:,2]
+	img_red = img[:,:,2]
 	kernel = np.ones((3,3))
 
 	#Dialating and eroding the image to remove the blood vessels
-	grayDil = cv2.dilate(imgR, kernel, iterations = 7)
-	grayEr = cv2.erode(grayDil, kernel, iterations = 3)
+	gray_dil = cv2.dilate(img_red, kernel, iterations = 7)
+	grayEr = cv2.erode(gray_dil, kernel, iterations = 3)
 
 	#Reducing salt and pepper noise introduced by the dilation and erosion
 	gray = cv2.medianBlur(np.float32(grayEr), 5)
@@ -69,10 +69,10 @@ def remove_optic_disc(img):
 	kernel = np.array([[0,1,0],
 					   [1,0,1],
 					   [0,1,0]])
-	imgF = cv2.filter2D(grad, 0, kernel)
+	img_filtered = cv2.filter2D(grad, 0, kernel)
 
 	#Darkening the smaller circles and the image
-	imgC = cv2.filter2D(imgF, 0, kernel/100)
+	img_conv = cv2.filter2D(img_filtered, 0, kernel/100)
 
 	#Defining the kernel to find larger circles
 	kernel = np.array([[0, 0, 1, 0, 0],
@@ -82,23 +82,23 @@ def remove_optic_disc(img):
 					   [0, 0, 1, 0, 0]])
 
 	#Darkening the larger circles and the image
-	imgC = cv2.filter2D(imgF, 0, kernel/25)
+	img_conv = cv2.filter2D(img_filtered, 0, kernel/25)
 
 	#Removing salt and pepper noise introduced due to the filtering
-	imgCB = cv2.bilateralFilter(imgC, 15, 75, 75)
-	imgCB = cv2.medianBlur(imgCB, 7)
+	img_conv_blur = cv2.bilateralFilter(img_conv, 15, 75, 75)
+	img_conv_blur = cv2.medianBlur(img_conv_blur, 7)
 
 	#Creating a binary image for edges
-	_, thresh = cv2.threshold(imgCB, 13, 255, cv2.THRESH_BINARY)
+	_, thresh = cv2.threshold(img_conv_blur, 13, 255, cv2.THRESH_BINARY)
 
 	#Find contours. If the length of the contours is not a fixed range, erode the image till atleast one contour in the rang eis detected
 	#A maximum of 10 erosions will be performed
 	erosion = 6
 	while True:
 		candidates = 0
-		threshE = cv2.erode(thresh, np.ones((2,2)), iterations = erosion)
-		threshD = cv2.dilate(threshE, np.ones((4,4)), iterations = 4)
-		contours = cv2.findContours(threshD, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+		thresh_erode = cv2.erode(thresh, np.ones((2,2)), iterations = erosion)
+		thresh_dilate = cv2.dilate(thresh_erode, np.ones((4,4)), iterations = 4)
+		contours = cv2.findContours(thresh_dilate, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 		contours = imutils.grab_contours(contours)
 		for c in contours:
 			if c.shape[0] > 100 and c.shape[0] < 500:
