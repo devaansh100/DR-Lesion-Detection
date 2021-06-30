@@ -2,13 +2,31 @@ import torch
 from torch import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 from math import ceil
 
 class SqueezeAndExcitation:
-	pass
-
+	def __init__(self, kernel_size, in_channels, ratio): #decide default value for ratio
+		'''
+			kernel_size = the size of the input image/size of the kernel for global average pooling,
+			in_channels = the number of channels in the input cube,
+			ratio = the ratio by which the compression is to be applied
+		'''
+		self.fc1 = nn.AvgPool2d(kernel_size = kernel_size)
+		self.squeeze = nn.Linear(
+						in_channels = in_channels,
+						out_channels = ceil(in_channels/ratio)
+					)
+		self.excite = nn.Linear(
+						in_channels = ceil(in_channels/ratio),
+						out_channels = in_channels
+					)
 	
+	def forward(self, x):
+		x = self.fc1(x)
+		x = self.squeeze(x)
+		x = F.relu(x)
+		x = self.excite(x)
+		x = F.sigmoid(x)
 
 class InverseResidualBlock(nn.Module):
 	def __init__(self, in_channels, in_resolution, expand_channels, kernel_size, stride, out_channels):
