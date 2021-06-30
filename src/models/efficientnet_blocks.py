@@ -52,6 +52,7 @@ class InverseResidualBlock(nn.Module):
 						in_channels = expand_channels,
 						out_channels = expand_channels,
 						kernel_size = kernel_size,
+						stride = stride,
 						groups = expand_channels
 					)
 		self.se = SqueezeAndExcitation(in_resolution, expand_channels, squeeze_channels)
@@ -60,16 +61,39 @@ class InverseResidualBlock(nn.Module):
 						out_channels = out_channels,
 						kernel_size = 1
 					)
+		self.survival_threshold = 0.7
+		self.use_skip = in_channels == out_channels and stride == 1
 
 	def forward(self, x):
-		x = self.conv1(x)
-		x = self.conv2dw(x)
-		x = F.silu(x)
-		x = x * self.se.forward(x)
-		x = F.silu(x)
-		x = self.conv3(x)
+		
+		block_not_missing = stochastic_depth()
+		
+		if block_not_missing:
+			initial = x
+			x = self.conv1(initial)
+			x = self.conv2dw(x)
+			x = F.relu(x)
+			x = x * self.se.forward(x)
+			x = F.silu(x)
+			x = self.conv3(x)
+			if self.use_skip:
+				return x + initial
+			else:
+				return x
+		else:
+			return x
 
-		return x
+
+	def stochastic_depth(self):
+
+		if self.training and self.use_skip:
+			survival = torch.rand(1)
+			if survival > survival_threshold:
+				return True
+			else:
+				return False
+		return True
+
 
 	def extract_saliency_map(self, layer):
 		pass
