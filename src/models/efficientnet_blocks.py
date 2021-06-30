@@ -54,7 +54,7 @@ class InverseResidualBlock(nn.Module):
 						kernel_size = kernel_size,
 						groups = expand_channels
 					)
-		self.se = SqueezeAndExcitation(in_resolution[0], expand_channels, squeeze_channels)
+		self.se = SqueezeAndExcitation(in_resolution, expand_channels, squeeze_channels)
 		self.conv3 = nn.Conv2d(
 						in_channels = expand_channels,
 						out_channels = out_channels,
