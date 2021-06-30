@@ -5,20 +5,20 @@ import torch.nn.functional as F
 from math import ceil
 
 class SqueezeAndExcitation(nn.Module):
-	def __init__(self, kernel_size, in_features, reduced_feautures):
+	def __init__(self, kernel_size, in_features, reduced_features):
 		'''
-		kernel_size = the size of the input image/size of the kernel for global average pooling
-		in_features = the number of channels in the input cube
-		reduced_feautures = the number of features in the squeezed representation
+		kernel_size: the size of the input image/size of the kernel for global average pooling
+		in_features: the number of channels in the input cube
+		reduced_features: the number of features in the squeezed representation
 		'''
 		super(SqueezeAndExcitation, self).__init__()
 		self.fc1 = nn.AvgPool2d(kernel_size = kernel_size)
 		self.squeeze = nn.Linear(
 						in_features = in_features,
-						out_features = reduced_feautures
+						out_features = reduced_features
 					)
 		self.excite = nn.Linear(
-						in_features = reduced_feautures,
+						in_features = reduced_features,
 						out_features = in_features
 					)
 	
@@ -65,7 +65,7 @@ class InverseResidualBlock(nn.Module):
 		self.use_skip = in_channels == out_channels and stride == 1
 
 	def forward(self, x):
-		
+
 		block_not_missing = stochastic_depth()
 		
 		if block_not_missing:
