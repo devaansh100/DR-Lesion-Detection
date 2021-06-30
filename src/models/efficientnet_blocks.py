@@ -76,7 +76,3 @@ class InverseResidualBlock(nn.Module):
 
 testNet = InverseResidualBlock(3,3,3,3,1,4)
 print(testNet)
-
-					
-
-
