@@ -5,11 +5,11 @@ import torch.nn.functional as F
 from math import ceil
 
 class SqueezeAndExcitation(nn.Module):
-	def __init__(self, kernel_size, in_features, reduced_feautures): #decide default value for ratio
+	def __init__(self, kernel_size, in_features, reduced_feautures):
 		'''
-			kernel_size = the size of the input image/size of the kernel for global average pooling
-			in_features = the number of channels in the input cube
-			reduced_feautures = the number of features in the squeezed representation
+		kernel_size = the size of the input image/size of the kernel for global average pooling
+		in_features = the number of channels in the input cube
+		reduced_feautures = the number of features in the squeezed representation
 		'''
 		super(SqueezeAndExcitation, self).__init__()
 		self.fc1 = nn.AvgPool2d(kernel_size = kernel_size)
@@ -34,13 +34,13 @@ class SqueezeAndExcitation(nn.Module):
 class InverseResidualBlock(nn.Module):
 	def __init__(self, in_channels, in_resolution, expand_channels, kernel_size, stride, out_channels, squeeze_channels = 4):
 		'''
-			in_channels: The number of channels in the input image
-			in_resolution: The input size of the image
-			expand_channels: The number of 1x1 filters to be used 
-			kernel_size: The kernel size for the depthwise convolution
-			stride: The stride for the convolution operator
-			out_channels: The number of channels in the final image
-			squeeze_channels: The number of channels to which the input channels has to be squeezed in the squeeze and excitation block
+		in_channels: The number of channels in the input image
+		in_resolution: The input size of the image
+		expand_channels: The number of 1x1 filters to be used 
+		kernel_size: The kernel size for the depthwise convolution
+		stride: The stride for the convolution operator
+		out_channels: The number of channels in the final image
+		squeeze_channels: The number of channels to which the input channels has to be squeezed in the squeeze and excitation block
 		'''
 		super(InverseResidualBlock, self).__init__()
 		self.conv1 = nn.Conv2d(
