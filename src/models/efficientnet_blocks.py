@@ -5,21 +5,21 @@ import torch.nn.functional as F
 from math import ceil
 
 class SqueezeAndExcitation(nn.Module):
-	def __init__(self, kernel_size, in_channels, reduced_channels): #decide default value for ratio
+	def __init__(self, kernel_size, in_features, reduced_feautures): #decide default value for ratio
 		'''
 			kernel_size = the size of the input image/size of the kernel for global average pooling
-			in_channels = the number of channels in the input cube
-			ratio = the ratio by which the compression is to be applied
+			in_features = the number of channels in the input cube
+			reduced_feautures = the number of features in the squeezed representation
 		'''
 		super(SqueezeAndExcitation, self).__init__()
 		self.fc1 = nn.AvgPool2d(kernel_size = kernel_size)
 		self.squeeze = nn.Linear(
-						in_channels = in_channels,
-						out_channels = reduced_channels
+						in_features = in_features,
+						out_features = reduced_feautures
 					)
 		self.excite = nn.Linear(
-						in_channels = reduced_channels,
-						out_channels = in_channels
+						in_features = reduced_feautures,
+						out_features = in_features
 					)
 	
 	def forward(self, x):
