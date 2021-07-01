@@ -81,7 +81,7 @@ class InverseResidualBlock(nn.Module):
 						groups = expand_channels
 					)
 		self.se = SqueezeAndExcitation(
-						in_resolution = in_resolution,
+						kernel_size = in_resolution,
 						in_features = expand_channels,
 						reduced_features = squeeze_channels
 					)
