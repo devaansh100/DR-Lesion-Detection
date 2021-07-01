@@ -5,12 +5,30 @@ import torch.nn.functional as F
 from math import ceil
 
 class StandardCNNBlock:
-	def __init__(self, kernel_size, in_channels, out_channels):
+	def __init__(self, kernel_size, in_channels, out_channels, stride):
 		'''
 		kernel_size: the size of the kernel for the convolution
 		in_channels: the number of input channels
 		out_channels: the number of filters to be used in the convolution
 		'''
+		super(StandardCNNBlock, self).__init__()
+		self.conv1 = nn.Conv2d(
+						in_channels = in_channels,
+						kernel_size = kernel_size,
+						out_channels = out_channels,
+						stride = stride
+					)
+		self.batch_norm = nn.BatchNorm2d(
+						num_features = out_channels
+					)
+
+	def forward(self, x):
+
+		x = self.conv1(x)
+		x = self.batch_norm(x)
+		x = F.silu(x)
+
+		return x
 
 class SqueezeAndExcitation(nn.Module):
 	def __init__(self, kernel_size, in_features, reduced_features):
@@ -89,6 +107,7 @@ class InverseResidualBlock(nn.Module):
 		x = F.silu(x)
 		x = self.conv3(x)
 		x = self.batch_norm(x)
+		x = F.silu(x)
 		with_skip_connection = stochastic_depth(initial, x)
 		return with_skip_connection
 
