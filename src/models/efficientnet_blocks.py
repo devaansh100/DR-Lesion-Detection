@@ -4,6 +4,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from math import ceil
 
+class StandardCNNBlock:
+	def __init__(self, kernel_size, in_channels, out_channels):
+		'''
+		kernel_size: the size of the kernel for the convolution
+		in_channels: the number of input channels
+		out_channels: the number of filters to be used in the convolution
+		'''
+
 class SqueezeAndExcitation(nn.Module):
 	def __init__(self, kernel_size, in_features, reduced_features):
 		'''
@@ -46,7 +54,7 @@ class InverseResidualBlock(nn.Module):
 		self.conv1 = nn.Conv2d(
 						in_channels  = in_channels,
 						out_channels = expand_channels,
-						kernel_size  = 1,
+						kernel_size  = 1
 					)
 		self.conv2dw = nn.Conv2d(
 						in_channels = expand_channels,
@@ -55,44 +63,46 @@ class InverseResidualBlock(nn.Module):
 						stride = stride,
 						groups = expand_channels
 					)
-		self.se = SqueezeAndExcitation(in_resolution, expand_channels, squeeze_channels)
+		self.se = SqueezeAndExcitation(
+						in_resolution = in_resolution,
+						in_features = expand_channels,
+						reduced_features = squeeze_channels
+					)
 		self.conv3 = nn.Conv2d(
 						in_channels = expand_channels,
 						out_channels = out_channels,
 						kernel_size = 1
 					)
-		self.survival_threshold = 0.7
+		self.batch_norm = nn.BatchNorm2d(
+						num_features = out_channels
+					)
 		self.use_skip = in_channels == out_channels and stride == 1
+		self.survival_threshold = 0.7
 
 	def forward(self, x):
 
-		block_not_missing = stochastic_depth()
-		
-		if block_not_missing:
-			initial = x
-			x = self.conv1(initial)
-			x = self.conv2dw(x)
-			x = F.relu(x)
-			x = x * self.se.forward(x)
-			x = F.silu(x)
-			x = self.conv3(x)
+		initial = x
+		x = self.conv1(initial)
+		x = self.conv2dw(x)
+		x = F.relu(x)
+		x = x * self.se.forward(x)
+		x = F.silu(x)
+		x = self.conv3(x)
+		x = self.batch_norm(x)
+		with_skip_connection = stochastic_depth(initial, x)
+		return with_skip_connection
+
+	def stochastic_depth(self, inital, x):
+
+		if self.training and self.use_skip:
+			survival = torch.rand(x.shape[0], 1, 1 , 1) < self.survival_threshold
+			x = torch.div(x, self.survival_threshold) * survival
+			return x + initial
+		else:	
 			if self.use_skip:
 				return x + initial
 			else:
 				return x
-		else:
-			return x
-
-
-	def stochastic_depth(self):
-
-		if self.training and self.use_skip:
-			survival = torch.rand(1)
-			if survival > survival_threshold:
-				return True
-			else:
-				return False
-		return True
 
 
 	def extract_saliency_map(self, layer):
