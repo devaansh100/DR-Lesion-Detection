@@ -5,10 +5,9 @@ import torch.nn.functional as F
 from squeeze_excitation import SqueezeAndExcitation
 
 class InverseResidualBlock(nn.Module):
-	def __init__(self, in_channels, in_resolution, expand_channels, kernel_size, stride, out_channels, squeeze_channels = 4):
+	def __init__(self, expand_channels, kernel_size, out_channels, in_channels, stride, squeeze_channels = 4):
 		'''
 		in_channels: The number of channels in the input image
-		in_resolution: The input size of the image
 		expand_channels: The number of 1x1 filters to be used 
 		kernel_size: The kernel size for the depthwise convolution
 		stride: The stride for the convolution operator
@@ -29,14 +28,14 @@ class InverseResidualBlock(nn.Module):
 						groups = expand_channels
 					)
 		self.se = SqueezeAndExcitation(
-						kernel_size = in_resolution,
 						in_features = expand_channels,
 						reduced_features = squeeze_channels
 					)
 		self.conv3 = nn.Conv2d(
 						in_channels = expand_channels,
 						out_channels = out_channels,
-						kernel_size = 1
+						kernel_size = 1,
+						bias = False
 					)
 		self.batch_norm = nn.BatchNorm2d(
 						num_features = out_channels

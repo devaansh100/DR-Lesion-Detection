@@ -4,14 +4,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class SqueezeAndExcitation(nn.Module):
-	def __init__(self, kernel_size, in_features, reduced_features):
+	def __init__(self, in_features, reduced_features):
 		'''
-		kernel_size: the size of the input image/size of the kernel for global average pooling
 		in_features: the number of channels in the input cube
 		reduced_features: the number of features in the squeezed representation
 		'''
 		super(SqueezeAndExcitation, self).__init__()
-		self.fc1 = nn.AvgPool2d(kernel_size = kernel_size)
+		self.fc1 = nn.AdaptiveAvgPool2d((1, 1))
 		self.squeeze = nn.Linear(
 						in_features = in_features,
 						out_features = reduced_features
