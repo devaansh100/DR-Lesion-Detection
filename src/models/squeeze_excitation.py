@@ -11,20 +11,22 @@ class SqueezeAndExcitation(nn.Module):
 		'''
 		super(SqueezeAndExcitation, self).__init__()
 		self.fc1 = nn.AdaptiveAvgPool2d((1, 1))
-		self.squeeze = nn.Linear(
-						in_features = in_features,
-						out_features = reduced_features
+		self.squeeze = nn.Conv2d(
+						in_channels = in_features,
+						out_channels = reduced_features,
+						kernel_size = 1
 					)
-		self.excite = nn.Linear(
-						in_features = reduced_features,
-						out_features = in_features
+		self.excite = nn.Conv2d(
+						in_channels = reduced_features,
+						out_channels = in_features,
+						kernel_size = 1
 					)
-	
+
 	def forward(self, x):
 		x = self.fc1(x)
 		x = self.squeeze(x)
-		x = F.relu(x)
+		x = F.silu(x)
 		x = self.excite(x)
-		x = F.sigmoid(x)
+		x = torch.sigmoid(x)
 
 		return x

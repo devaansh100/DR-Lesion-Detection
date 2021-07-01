@@ -4,8 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from squeeze_excitation import SqueezeAndExcitation
 
-class InverseResidualBlock(nn.Module):
-	def __init__(self, expand_channels, kernel_size, out_channels, in_channels, stride, squeeze_channels = 4):
+class InvertedResidualBlock(nn.Module):
+	def __init__(self, expand_channels, kernel_size, out_channels, in_channels, stride, padding, squeeze_channels = 4):
 		'''
 		in_channels: The number of channels in the input image
 		expand_channels: The number of 1x1 filters to be used 
@@ -14,7 +14,7 @@ class InverseResidualBlock(nn.Module):
 		out_channels: The number of channels in the final image
 		squeeze_channels: The number of channels to which the input channels has to be squeezed in the squeeze and excitation block
 		'''
-		super(InverseResidualBlock, self).__init__()
+		super(InvertedResidualBlock, self).__init__()
 		self.conv1 = nn.Conv2d(
 						in_channels  = in_channels,
 						out_channels = expand_channels,
@@ -25,11 +25,12 @@ class InverseResidualBlock(nn.Module):
 						out_channels = expand_channels,
 						kernel_size = kernel_size,
 						stride = stride,
+						padding = padding,
 						groups = expand_channels
 					)
 		self.se = SqueezeAndExcitation(
 						in_features = expand_channels,
-						reduced_features = squeeze_channels
+						reduced_features = int(expand_channels/squeeze_channels)
 					)
 		self.conv3 = nn.Conv2d(
 						in_channels = expand_channels,
@@ -48,16 +49,16 @@ class InverseResidualBlock(nn.Module):
 		initial = x
 		x = self.conv1(initial)
 		x = self.conv2dw(x)
-		x = F.relu(x)
+		x = F.silu(x)
 		x = x * self.se.forward(x)
 		x = F.silu(x)
 		x = self.conv3(x)
 		x = self.batch_norm(x)
 		x = F.silu(x)
-		with_skip_connection = stochastic_depth(initial, x)
+		with_skip_connection = self.stochastic_depth(initial, x)
 		return with_skip_connection
 
-	def stochastic_depth(self, inital, x):
+	def stochastic_depth(self, initial, x):
 
 		if self.training and self.use_skip:
 			survival = torch.rand(x.shape[0], 1, 1 , 1) < self.survival_threshold
