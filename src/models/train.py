@@ -14,7 +14,7 @@ def main():
 	NUM_WORKERS = 2
 	BATCH_SIZE = 32
 	LEARNING_RATE = 1e-3
-	DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+	DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 	TRAIN_IMG = '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_preprocessed/'
 	VAL_IMG = '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/validation_preprocessed'
 
