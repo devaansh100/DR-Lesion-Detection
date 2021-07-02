@@ -25,6 +25,7 @@ def main():
 	validation_loader = DataLoader(dataset = validation, batch_size = BATCH_SIZE, shuffle = True, num_workers = NUM_WORKERS)
 
 	model = EfficientNet(0.2, 0)
+	model = model.to(DEVICE)
 	loss_fn = nn.CrossEntropyLoss()
 	optimizer = optim.Adam(model.parameters(), lr = LEARNING_RATE)
 
