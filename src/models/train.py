@@ -26,11 +26,13 @@ def main():
 	validation_loader = DataLoader(dataset = validation, batch_size = BATCH_SIZE, shuffle = True, num_workers = NUM_WORKERS)
 
 	model = EfficientNet(0.2, 0)
+	model.apply(weights_init)
 	model = model.to(DEVICE)
 	loss_fn = nn.CrossEntropyLoss()
 	optimizer = optim.Adam(model.parameters(), lr = LEARNING_RATE)
 
 	min_valid_loss = np.inf
+
 
 	for epoch in range(NUM_EPOCHS):
 		
@@ -79,5 +81,11 @@ def main():
 			print(f'Validation Loss decreased from {min_valid_loss:.6f} to {valid_loss:.6f} \t Saving Model')
 			torch.save(model.state_dict(), MODEL_PATH + 'model.pth')
 			min_valid_loss = valid_loss
+
+def weights_init(m):
+    if isinstance(m, nn.Conv2d):
+        torch.nn.init.xavier_normal_(m.weight)
+        torch.nn.init.zeros_(m.bias)
+
 if __name__ == '__main__':
 	main()
