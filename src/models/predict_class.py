@@ -17,14 +17,14 @@ def main():
 	DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 	validation = DRDataset(config['VALID_LABELS'], config['VAL_IMG'], transforms.ToTensor())
-	validation_loader = DataLoader(dataset = validation, batch_size = 1, shuffle = True, num_workers = config['NUM_WORKERS'])
+	loader = DataLoader(dataset = validation, batch_size = 1, shuffle = True, num_workers = config['NUM_WORKERS'])
 	correct = 0
 	total = validation.__len__()
 
 	model = EfficientNet(0.2, 0)
-	model.load_state_dict(torch.load(config['MODEL_PATH'] + config['MODEL_NAME'], map_location = (DEVICE)))
+	model.load_state_dict(torch.load(config['MODEL_PATH'] + config['MODEL_NAME'], map_location = DEVICE))
 	model.eval()
-	for batch_idx, (images, labels) in enumerate(tqdm(validation_loader)):
+	for batch_idx, (images, labels) in enumerate(tqdm(loader)):
 		images = images.to(DEVICE)
 		labels = labels.to(DEVICE)
 
