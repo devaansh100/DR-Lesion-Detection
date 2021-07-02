@@ -75,10 +75,11 @@ def train():
 			predictions = predictions.view(batch_number, 5)
 			labels = labels.view(batch_number)
 
-			prediction_probabilities = F.softmax(predictions)
-			predicted_classes = torch.from_numpy(np.array([torch.argmax(x) for x in prediction_probabilities]))
-			correct_predictions = (predicted_classes == labels).sum()
-			correct += correct_predictions
+			prediction_probabilities = F.softmax(predictions, dim = -1)
+		    predicted_classes = torch.from_numpy(np.array([int(torch.argmax(x)) for x in prediction_probabilities]))
+		    predicted_classes = predicted_classes.to(DEVICE)
+		    correct_predictions = (predicted_classes == labels).sum()
+		    correct += correct_predictions
 
 			loss = loss_fn(predictions, labels)
 
