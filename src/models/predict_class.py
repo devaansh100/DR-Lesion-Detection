@@ -12,6 +12,7 @@ from tqdm import tqdm
 def main():
 	VAL_IMG = '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/validation_preprocessed/'
 	MODEL_PATH = '/Users/devaanshgupta/Desktop/PS-I/DR-Lesion-Detection/models/'
+	MODEL_NAME = 'model.pth'
 	DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 	BATCH_SIZE = 1
 	NUM_WORKERS = 2
@@ -22,7 +23,7 @@ def main():
 	total = validation.__len__()
 
 	model = EfficientNet(0.2, 0)
-	model.load_state_dict(torch.load(MODEL_PATH + 'model.pth', map_location = (DEVICE)))
+	model.load_state_dict(torch.load(MODEL_PATH + MODEL_NAME, map_location = (DEVICE)))
 	model.eval()
 	for batch_idx, (images, labels) in enumerate(tqdm(validation_loader)):
 		images = images.to(DEVICE)
