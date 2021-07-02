@@ -3,11 +3,16 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import pandas as pd
 from skimage import io
+import torchvision
+import torchvision.transforms as transforms
 
 class DRDataset(Dataset):
 
 	def __init__(self, csv_file, root_dir, transform = None):
-		self.labels = pd.read_csv(csv_file, header = None,  skiprows = [0])
+		labels = pd.read_csv(csv_file, header = None, skiprows = [0])
+		# df.drop('class',axis = 1)
+		# df.join(one_hot)
+		self.labels = labels
 		self.root_dir = root_dir
 		self.transform = transform
 
@@ -18,10 +23,9 @@ class DRDataset(Dataset):
 	def __getitem__(self, index):
 		img_path = self.root_dir + self.labels.iloc[index, 0] + '.jpeg'
 		img = io.imread(img_path)
-		truth_value = torch.ToTensor(int(self.labels.iloc[index, 1])) 
+		truth_value = torch.tensor(int(self.labels.iloc[index, 1])) 
 
 		if self.transform:
 			img = self.transform(img)
 
 		return (img, truth_value)
-

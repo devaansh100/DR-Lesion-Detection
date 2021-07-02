@@ -62,6 +62,7 @@ class InvertedResidualBlock(nn.Module):
 
 		if self.training and self.use_skip:
 			survival = torch.rand(x.shape[0], 1, 1 , 1) < self.survival_threshold
+			survival = torch.to(DEVICE)
 			x = torch.div(x, self.survival_threshold) * survival
 			return x + initial
 		else:	

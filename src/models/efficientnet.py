@@ -106,17 +106,10 @@ class EfficientNet(nn.Module):
 								kernel_size = 1
 							)
 					)
-		layers.append(
-						nn.Softmax(
-								dim=-1
-							)
-					)
 		return layers
 
 	def forward(self, x):
 		return self.seq(x)
 
 
-testNet = EfficientNet(1, 4)
-print(testNet.forward(torch.rand(1,3,224,224)).shape)
 # Add check for image resolution
