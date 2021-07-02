@@ -16,8 +16,10 @@ def weights_init(m):
 		nn.init.xavier_normal_(m.weight)
 		try:
 			nn.init.zeros_(m.bias)
+		except:
+			print('No bias found')
 
-def main():
+def train():
 	config_file = open('config.yml', 'r')
 	config = yaml.safe_load(config_file)
 	DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -90,4 +92,4 @@ def main():
 			min_valid_loss = valid_loss
 
 if __name__ == '__main__':
-	main()
+	train()
