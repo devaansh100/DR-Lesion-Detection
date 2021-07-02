@@ -10,8 +10,6 @@ class DRDataset(Dataset):
 
 	def __init__(self, csv_file, root_dir, transform = None):
 		labels = pd.read_csv(csv_file, header = None, skiprows = [0])
-		# df.drop('class',axis = 1)
-		# df.join(one_hot)
 		self.labels = labels
 		self.root_dir = root_dir
 		self.transform = transform
