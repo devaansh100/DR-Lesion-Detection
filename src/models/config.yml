@@ -1,0 +1,9 @@
+VAL_IMG: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/validation_preprocessed/
+TRAIN_IMG: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_preprocessed/
+MODEL_PATH: /Users/devaanshgupta/Desktop/PS-I/DR-Lesion-Detection/models/
+MODEL_NAME: model.pth
+BATCH_SIZE: 1
+NUM_WORKERS: 2
+NUM_EPOCHS: 100
+NUM_WORKERS: 2
+BATCH_SIZE: 32
