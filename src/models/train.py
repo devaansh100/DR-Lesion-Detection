@@ -35,6 +35,7 @@ def train():
 	model = model.to(DEVICE)
 	loss_fn = nn.CrossEntropyLoss()
 	optimizer = optim.Adam(model.parameters(), lr = config['LEARNING_RATE'])
+	scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
 	min_valid_loss = np.inf
 
@@ -60,7 +61,7 @@ def train():
 			optimizer.step()
 
 			train_loss += loss.item() * images.size(0)
-			
+		scheduler.step()	
 		valid_loss = 0.0
 		correct = 0
 		total = validation.__len__()
