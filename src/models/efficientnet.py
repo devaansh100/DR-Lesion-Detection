@@ -108,6 +108,9 @@ class EfficientNet(nn.Module):
 								kernel_size = 1
 							)
 					)
+		layers.append(
+						nn.SiLU()
+					)
 		return layers
 
 	def forward(self, x):
