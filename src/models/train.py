@@ -24,18 +24,18 @@ def train():
 	config = yaml.safe_load(config_file)
 	DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-	training = DRDataset(config['TRAIN_LABELS'], config['TRAIN_IMG'], transforms.ToTensor())
-	validation = DRDataset(config['VALID_LABELS'], config['VAL_IMG'], transforms.ToTensor())
-
-	training_loader = DataLoader(dataset = training, batch_size = config['BATCH_SIZE'], shuffle = True, num_workers = config['NUM_WORKERS'])
-	validation_loader = DataLoader(dataset = validation, batch_size = config['BATCH_SIZE'], shuffle = True, num_workers = config['NUM_WORKERS'])
-
 	model = EfficientNet(0.5, 0)
 	model.apply(weights_init)
 	model = model.to(DEVICE)
 	loss_fn = nn.CrossEntropyLoss()
 	optimizer = optim.Adam(model.parameters(), lr = config['LEARNING_RATE'])
 	scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+
+	training = DRDataset(config['TRAIN_LABELS'], config['TRAIN_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
+	validation = DRDataset(config['VALID_LABELS'], config['VAL_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
+
+	training_loader = DataLoader(dataset = training, batch_size = config['BATCH_SIZE'], shuffle = True, num_workers = config['NUM_WORKERS'])
+	validation_loader = DataLoader(dataset = validation, batch_size = config['BATCH_SIZE'], shuffle = True, num_workers = config['NUM_WORKERS'])
 
 	min_valid_loss = np.inf
 

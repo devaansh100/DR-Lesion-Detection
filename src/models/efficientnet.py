@@ -23,6 +23,7 @@ class EfficientNet(nn.Module):
 	def __init__(self, dropout_rate, phi, alpha = 1.2, beta = 1.1, gamma = 1.15):
 		super(EfficientNet, self).__init__()
 		self.depth_factor, self.width_factor, self.resolution_factor = self.calc_expand_factors(alpha, beta, gamma, phi)
+		self.input_size = ceil(224*self.resolution_factor)
 
 		initial_layers = self.define_initial_layers()
 		mobilenet_layers = self.define_mobilenet_layers()
