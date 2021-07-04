@@ -101,7 +101,11 @@ class EfficientNet(nn.Module):
 								output_size = (1,1)
 							)
 					)
-		
+		layers.append(
+						nn.Dropout(
+								dropout_rate
+							)
+					)
 		layers.append(
 						nn.Conv2d(
 								in_channels = ceil(1280*self.width_factor), 
