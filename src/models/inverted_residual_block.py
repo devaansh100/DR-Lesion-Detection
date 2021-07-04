@@ -28,6 +28,7 @@ class InvertedResidualBlock(nn.Module):
 						padding = padding,
 						groups = expand_channels
 					)
+		self.dropout = nn.dropout(0.8)
 		self.se = SqueezeAndExcitation(
 						in_features = expand_channels,
 						reduced_features = int(expand_channels/squeeze_channels)
@@ -50,6 +51,7 @@ class InvertedResidualBlock(nn.Module):
 		x = self.conv1(initial)
 		x = self.conv2dw(x)
 		x = F.silu(x)
+		x = x.dropout(x)
 		x = x * self.se.forward(x)
 		x = F.silu(x)
 		x = self.conv3(x)
