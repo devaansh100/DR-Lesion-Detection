@@ -17,14 +17,14 @@ def weights_init(m):
 		try:
 			nn.init.zeros_(m.bias)
 		except:
-			print('No bias found')
+			pass
 
 def train():
 	config_file = open('config.yml', 'r')
 	config = yaml.safe_load(config_file)
 	DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-	model = EfficientNet(0.5, 0)
+	model = EfficientNet(0.5, 1)
 	model.apply(weights_init)
 	model = model.to(DEVICE)
 	loss_fn = nn.CrossEntropyLoss()
@@ -40,8 +40,10 @@ def train():
 	min_valid_loss = np.inf
 
 	for epoch in range(config['NUM_EPOCHS']):
-		
+		print(f'Epoch {epoch + 1}:')
 		train_loss = 0.0
+		correct = 0.0
+		total = training.__len__()
 		model.train()
 		for batch_idx, (images, labels) in enumerate(tqdm(training_loader)):
 			images = images.to(DEVICE)
@@ -53,6 +55,12 @@ def train():
 			predictions = predictions.view(batch_number, 5)
 			labels = labels.view(batch_number)
 
+			prediction_probabilities = F.softmax(predictions, dim = -1)
+			predicted_classes = torch.from_numpy(np.array([int(torch.argmax(x)) for x in prediction_probabilities]))
+			predicted_classes = predicted_classes.to(DEVICE)
+			correct_predictions = (predicted_classes == labels).sum()
+			correct += correct_predictions
+
 			loss = loss_fn(predictions, labels)
 
 			optimizer.zero_grad()
@@ -61,6 +69,7 @@ def train():
 			optimizer.step()
 
 			train_loss += loss.item() * images.size(0)
+		train_accuracy = correct*100/total
 		scheduler.step()	
 		valid_loss = 0.0
 		correct = 0
@@ -77,16 +86,18 @@ def train():
 			labels = labels.view(batch_number)
 
 			prediction_probabilities = F.softmax(predictions, dim = -1)
-		    predicted_classes = torch.from_numpy(np.array([int(torch.argmax(x)) for x in prediction_probabilities]))
-		    predicted_classes = predicted_classes.to(DEVICE)
-		    correct_predictions = (predicted_classes == labels).sum()
-		    correct += correct_predictions
+			predicted_classes = torch.from_numpy(np.array([int(torch.argmax(x)) for x in prediction_probabilities]))
+			predicted_classes = predicted_classes.to(DEVICE)
+			correct_predictions = (predicted_classes == labels).sum()
+			correct += correct_predictions
 
 			loss = loss_fn(predictions, labels)
 
 			valid_loss += loss.item() * images.size(0)
+		validation_accuracy = correct*100/total
 
-		print(f'Epoch {epoch}: \t Training Loss: {train_loss/len(training_loader)} \t Validation Loss: {valid_loss/len(validation_loader)} \t Validation Accuracy: {correct/total}')
+		print(f'Training Loss: {train_loss/len(training_loader)} \t Validation Loss: {valid_loss/len(validation_loader)}')
+		print(f'Training Accuracy: {train_accuracy} \t Validation Accuracy: {validation_accuracy}')
 
 		if min_valid_loss > valid_loss:
 			print(f'Validation Loss decreased from {min_valid_loss:.6f} to {valid_loss:.6f} \t Saving Model')
