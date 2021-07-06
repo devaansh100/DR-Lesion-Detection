@@ -102,11 +102,6 @@ class EfficientNet(nn.Module):
 							)
 					)
 		layers.append(
-						nn.Dropout(
-								dropout_rate
-							)
-					)
-		layers.append(
 						nn.Conv2d(
 								in_channels = ceil(1280*self.width_factor), 
 								out_channels = 5,
@@ -120,6 +115,3 @@ class EfficientNet(nn.Module):
 
 	def forward(self, x):
 		return self.seq(x)
-
-
-# Add check for image resolution
