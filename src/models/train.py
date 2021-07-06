@@ -30,7 +30,7 @@ def train():
 	model = EfficientNet(0.5, 1)
 	model.apply(weights_init)
 	model = model.to(DEVICE)
-	loss_fn = nn.CrossEntropyLoss()
+	loss_fn = nn.MSELoss()
 	optimizer = optim.Adam(model.parameters(), lr = config['LEARNING_RATE'])
 	scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
@@ -54,8 +54,8 @@ def train():
 			predictions = model(images)
 
 			batch_number = predictions.shape[0]
-			predictions = predictions.view(batch_number, 5)
-			labels = labels.view(batch_number)
+			predictions = predictions.view(batch_number, 1).float()
+			labels = labels.view(batch_number, 1).float()
 
 			correct += predict(predictions, labels)
 
@@ -80,8 +80,8 @@ def train():
 			predictions = model(images)
 
 			batch_number = predictions.shape[0]
-			predictions = predictions.view(batch_number, 5)
-			labels = labels.view(batch_number)
+			predictions = predictions.view(batch_number, 1).float()
+			labels = labels.view(batch_number, 1).float()
 
 			correct += predict(predictions, labels)
 
@@ -94,7 +94,7 @@ def train():
 		print(f'Training Accuracy: {train_accuracy} \t Validation Accuracy: {validation_accuracy}')
 
 		if min_valid_loss > valid_loss:
-			print(f'Validation Loss decreased from {min_valid_loss:.6f} to {valid_loss:.6f} \t Saving Model')
+			print(f'Validation Loss decreased from {min_valid_loss:.6f} to {valid_loss:.6f} \t Saving Model\n')
 			torch.save(model.state_dict(), config['MODEL_PATH'] + config['model.pth'])
 			min_valid_loss = valid_loss
 

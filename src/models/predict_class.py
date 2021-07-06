@@ -32,13 +32,16 @@ def main():
 
 	print(f"Accuracy: {correct/total}")
 
-def predict(features, labels):
-	prediction_probabilities = F.softmax(features, dim = -1)
-	predicted_classes = torch.from_numpy(np.array([int(torch.argmax(x)) for x in prediction_probabilities]))
-	predicted_classes = predicted_classes.to(DEVICE)
-	nCorrect_predictions = (predicted_classes == labels).sum()
+def predict(predictions, labels):
+	predictions[predictions < 0.5] = 0
+	predictions[torch.logical_and(predictions >= 0.5, predictions < 1.5)] = 1
+	predictions[torch.logical_and(predictions >= 1.5, predictions < 2.5)] = 2
+	predictions[torch.logical_and(predictions >= 2.5, predictions < 3.5)] = 3
+	predictions[predictions >= 3.5] = 4
 
-	return nCorrect_predictions
+	n_correct_predictions = (predictions == labels).sum()
+
+	return n_correct_predictions
 
 
 if __name__ == '__main__':
