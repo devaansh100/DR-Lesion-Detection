@@ -12,6 +12,7 @@ import yaml
 import torch.nn.functional as F
 import pandas as pd
 from predict_class import predict
+from collections import Counter
 
 def weights_init(m):
 	if isinstance(m, nn.Conv2d):
@@ -36,11 +37,12 @@ def train():
 	training = DRDataset(config['TRAIN_LABELS'], config['TRAIN_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
 	validation = DRDataset(config['VALID_LABELS'], config['VAL_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
 
-	class_weights = torch.tensor([1.0, 52.8, 48.75, 49.22, 52.01])
-	labels = torch.tensor(training.labels.iloc[:,1]).view(1, training.__len__())
+	labels = list(training.labels.iloc[:,1])
+	hist = torch.tensor(list(Counter(labels).values()))
+	class_weights = 1. / hist
 	sample_weights = torch.tensor(class_weights[labels])
 
-	sampler = WeightedRandomSampler(sample_weights, num_samples = training.__len__(), replacement = True)
+	sampler = WeightedRandomSampler(sample_weights, num_samples = len(sample_weights), replacement = True)
 	
 	training_loader = DataLoader(dataset = training, batch_size = config['BATCH_SIZE'], num_workers = config['NUM_WORKERS'], sampler = sampler)
 	validation_loader = DataLoader(dataset = validation, batch_size = config['BATCH_SIZE'], shuffle = True, num_workers = config['NUM_WORKERS'])
