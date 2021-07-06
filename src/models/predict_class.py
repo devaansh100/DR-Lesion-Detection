@@ -21,23 +21,24 @@ def main():
 	correct = 0
 	total = validation.__len__()
 
-	model = EfficientNet(0.2, 0)
+	model = EfficientNet(0.65, 1)
 	model.load_state_dict(torch.load(config['MODEL_PATH'] + config['MODEL_NAME'], map_location = DEVICE))
 	model.eval()
 	for batch_idx, (images, labels) in enumerate(tqdm(loader)):
 		images = images.to(DEVICE)
 		labels = labels.to(DEVICE)
 
-		predictions = model(images)
+		correct += predict(model(images), labels)
 
-		batch_number = predictions.shape[0]
-		predictions = predictions.view(batch_number, 5)
-		labels = labels.view(batch_number)
-		predicted_class = torch.argmax(predictions)
-
-		if predicted_class == labels:
-			correct += 1
 	print(f"Accuracy: {correct/total}")
+
+def predict(features, labels):
+	prediction_probabilities = F.softmax(features, dim = -1)
+	predicted_classes = torch.from_numpy(np.array([int(torch.argmax(x)) for x in prediction_probabilities]))
+	predicted_classes = predicted_classes.to(DEVICE)
+	nCorrect_predictions = (predicted_classes == labels).sum()
+
+	return nCorrect_predictions
 
 if __name__ == '__main__':
 	main()

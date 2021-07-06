@@ -11,6 +11,7 @@ import torch.nn as nn
 import yaml
 import torch.nn.functional as F
 import pandas as pd
+from predict_class import predict
 
 def weights_init(m):
 	if isinstance(m, nn.Conv2d):
@@ -61,11 +62,7 @@ def train():
 			predictions = predictions.view(batch_number, 5)
 			labels = labels.view(batch_number)
 
-			prediction_probabilities = F.softmax(predictions, dim = -1)
-			predicted_classes = torch.from_numpy(np.array([int(torch.argmax(x)) for x in prediction_probabilities]))
-			predicted_classes = predicted_classes.to(DEVICE)
-			correct_predictions = (predicted_classes == labels).sum()
-			correct += correct_predictions
+			correct += predict(predictions, labels)
 
 			loss = loss_fn(predictions, labels)
 			optimizer.zero_grad()
@@ -91,11 +88,7 @@ def train():
 			predictions = predictions.view(batch_number, 5)
 			labels = labels.view(batch_number)
 
-			prediction_probabilities = F.softmax(predictions, dim = -1)
-			predicted_classes = torch.from_numpy(np.array([int(torch.argmax(x)) for x in prediction_probabilities]))
-			predicted_classes = predicted_classes.to(DEVICE)
-			correct_predictions = (predicted_classes == labels).sum()
-			correct += correct_predictions
+			correct += predict(predictions, labels)
 
 			loss = loss_fn(predictions, labels)
 
