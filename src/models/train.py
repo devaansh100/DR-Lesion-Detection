@@ -35,7 +35,7 @@ def train():
 	scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
 	training = DRDataset(config['TRAIN_LABELS'], config['TRAIN_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
-	validation = DRDataset(config['VALID_LABELS'], config['VAL_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
+	validation = DRDataset(config['VAL_LABELS'], config['VAL_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
 
 	labels = list(training.labels.iloc[:,1])
 	hist = torch.tensor(list(Counter(labels).values()))

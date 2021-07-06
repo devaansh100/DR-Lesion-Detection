@@ -16,7 +16,7 @@ def main():
 
 	DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-	validation = DRDataset(config['VALID_LABELS'], config['VAL_IMG'], transforms.ToTensor())
+	validation = DRDataset(config['VAL_LABELS'], config['VAL_IMG'], transforms.ToTensor())
 	loader = DataLoader(dataset = validation, batch_size = 1, shuffle = True, num_workers = config['NUM_WORKERS'])
 	correct = 0
 	total = validation.__len__()
@@ -39,6 +39,7 @@ def predict(features, labels):
 	nCorrect_predictions = (predicted_classes == labels).sum()
 
 	return nCorrect_predictions
+
 
 if __name__ == '__main__':
 	main()

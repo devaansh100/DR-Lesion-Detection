@@ -2,10 +2,10 @@ VAL_IMG: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/v
 TRAIN_IMG: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_preprocessed/
 TEST_IMG: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/test_data_unzip/test_preprocessed/
 MODEL_PATH: /Users/devaanshgupta/Desktop/PS-I/DR-Lesion-Detection/models/
-TRAIN_LABELS: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/Labels/trainingLabels.csv
-VALID_LABELS: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/Labels/validationLabels.csv
-TEST_LABELS: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/Labels/testLabels.csv
-MODEL_NAME: EfficientNetB0.pth
+TRAIN_LABELS: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/labels/trainingLabels.csv
+VAL_LABELS: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/labels/validationLabels.csv
+TEST_LABELS: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/labels/testLabels.csv
+MODEL_NAME: EfficientNetB1_dropout = 0.65v2.pth
 NUM_WORKERS: 2
 NUM_EPOCHS: 100
 NUM_WORKERS: 2
