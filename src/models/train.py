@@ -37,14 +37,7 @@ def train():
 	training = DRDataset(config['TRAIN_LABELS'], config['TRAIN_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
 	validation = DRDataset(config['VAL_LABELS'], config['VAL_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
 
-	labels = list(training.labels.iloc[:,1])
-	hist = torch.tensor(list(Counter(labels).values()))
-	class_weights = 1. / hist
-	sample_weights = torch.tensor(class_weights[labels])
-
-	sampler = WeightedRandomSampler(sample_weights, num_samples = len(sample_weights), replacement = True)
-	
-	training_loader = DataLoader(dataset = training, batch_size = config['BATCH_SIZE'], num_workers = config['NUM_WORKERS'], sampler = sampler)
+	training_loader = DataLoader(dataset = training, batch_size = config['BATCH_SIZE'], num_workers = config['NUM_WORKERS'], shuffle = True)
 	validation_loader = DataLoader(dataset = validation, batch_size = config['BATCH_SIZE'], shuffle = True, num_workers = config['NUM_WORKERS'])
 	min_valid_loss = np.inf
 
