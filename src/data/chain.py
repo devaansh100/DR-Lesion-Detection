@@ -8,13 +8,17 @@ import csv
 from import_images import get_images, get_images_distribution
 from data_augmentation import augment, divide_dataset
 from preprocessing import mask, crop_edges
+import sys
+sys.path.append('../config/')
+from config import read_config
+
+config = read_config()
 
 def preprocess(image):
 	'''Calls all the pre-processing steps'''
-
 	#Read image into a numpy array
 	try:
-		img = cv2.imread(image, -1)
+		img = cv2.imread(config['DATASET'] + image, -1)
 		if img is None:
 			return 0
 	except:
@@ -32,7 +36,7 @@ def preprocess(image):
 	#save image
 	try:
 		if img is not None:
-			img = cv2.imread(image)
+			img = cv2.imwrite(config['TEST_IMG'] + image, img)
 
 		else:
 			print(f'{image} is None')
@@ -42,24 +46,31 @@ def preprocess(image):
 	return 1
 
 def main():
-	data_path = '/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/'
 	'''Creates a thread for each image'''
 	with concurrent.futures.ThreadPoolExecutor() as executor:
 		
 		# Pre-processing all training images
-		images = get_images()
-		results = list(tqdm(executor.map(preprocess, images), total=len(images)))
+		# images = get_images()
+		# results = list(tqdm(executor.map(preprocess, images), total=len(images)))
 
 		'''
+		Kaggle Dataset
+
 		Label distribution  - [25809, 2443, 5292, 873, 708]
 		Distribution in training before augmentation - [20648,  1955,  4234,   699,   567]
 		Distruibution of nAugmentations - [0, 1, 0, 5, 6]
 		Distribution in training after augmentation - [20648,  3910,  4234,  4194,  3969]
 		Distribution in validation - [5161,  488, 1058,  174,  141]
 		'''
+
+		'''
+		DDR Dataset
+
+		Distribution in training - [3133, 2238, 118, 456, 575]
+		'''
 		
 		#Getting image distribution
-		image_distribution = get_images_distribution()
+		training_data = get_images_distribution()
 
 		#Dividing dataset into training and validation set
 		training_data, validation_data = divide_dataset(image_distribution, [20648, 1955, 4234, 699, 567], [5161, 488, 1058, 174, 141])
@@ -72,34 +83,34 @@ def main():
 		
 		# Adding the new augmented images into the training data distribution
 		for label in training_data:
+			label = int(label)
 			if label == 1 or label == 3 or label == 4:
 				length = len(training_data[label])
 				for i in range(0, length):
 					for j in range(0, nAugmentations[label]):
 						training_data[label].append(training_data[label][i] + '-' + str(j+1))
 
-
-		#Saving the labels in training.csv
-		with open(data_path + 'trainingLabels.csv','w') as training:
+		#Saving the labels in trainingLabels.csv
+		with open(trainLabels,'w') as training:
 			training_writer = csv.writer(training)
 			training_writer.writerow(['img-code', 'class'])
 			for label in training_data:
 				for image in training_data[label]:
 					training_writer.writerow([image, label])
 
-		#Saving the labels in training.csv
-		with open(data_path + 'validationLabels.csv','w') as validation:
+		#Saving the labels in validationLabels.csv
+		with open(config['VAL_LABELS'],'w') as validation:
 			validation_writer = csv.writer(validation)
 			validation_writer.writerow(['img-code', 'class'])
 			for label in validation_data:
 				for image in validation_data[label]:
 					validation_writer.writerow([image, label])
 
-		# #Moving the files into separate test and validation folders
+		#Moving the files into separate test and validation folders
 		for label in validation_data:
 			for image in validation_data[label]:
 				try:
-					os.rename(data_path + 'train_data_unzip/train_preprocessed/'+image + '.jpeg', data_path + 'train_data_unzip/validation_preprocessed/'+image+'.jpeg')
+					os.rename(config['TRAIN_IMG'] + image + '.jpeg', config['VAL_IMG'] + image + '.jpeg')
 				except:
 					print(f'Issue in {image}')
 		

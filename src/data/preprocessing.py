@@ -2,6 +2,11 @@ import cv2
 import numpy as np
 import imutils
 from imutils import contours
+import sys
+sys.path.append('../config/')
+from config import read_config
+
+config = read_config()
 
 def mask(img):
 	'''Creates a mask for the image to remove outer black borders'''
@@ -14,7 +19,7 @@ def mask(img):
 		return None
 
 	#Resizing the image
-	masked_img = cv2.resize(masked_img, (224,224))
+	masked_img = cv2.resize(masked_img, (config['IMG_SIZE'], config['IMG_SIZE']))
 
 	#Creating the mask. Remove black pixels and change to white pixels
 	masked_img = cv2.addWeighted(masked_img,4, cv2.GaussianBlur(masked_img , (0,0) , 25) ,-4 ,128)

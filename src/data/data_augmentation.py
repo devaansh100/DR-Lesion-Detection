@@ -1,11 +1,16 @@
 import random
 import cv2
 import numpy as np
+import sys
+sys.path.append('../config/')
+from config import read_config
+
+config = read_config()
 
 def augment(image, nAugmentations):
 	'''Performs data augmentation on each image provided in a list'''
 	try:
-		img = cv2.imread('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_preprocessed/' + image + '.jpeg')
+		img = cv2.imread(config['DATASET'] + image + '.jpeg')
 		if img is None:
 			print(f'{image} is of type None')
 			return 0
@@ -52,7 +57,7 @@ def augment(image, nAugmentations):
 
 		try:
 			#Saving the augmented image
-			cv2.imwrite('/Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_preprocessed/' + image + '-'+str(i+1)+'.jpeg', new_image)
+			cv2.imwrite(config['TRAIN_IMG'] + image + '-'+str(i+1)+'.jpeg', new_image)
 			# cv2.imwrite(image.replace('.jpeg','') + '-'+str(i+1)+'.jpeg', new_image)
 
 		except:
