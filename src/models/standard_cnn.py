@@ -1,7 +1,7 @@
 import torch
-from torch import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 class StandardCNNBlock(nn.Module):
 	def __init__(self, kernel_size, in_channels, out_channels, stride, padding):

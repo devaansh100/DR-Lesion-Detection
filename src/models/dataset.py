@@ -1,10 +1,10 @@
 import torch
-from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import pandas as pd
-from skimage import io
 import torchvision
 import torchvision.transforms as transforms
+from torch.utils.data import Dataset, DataLoader
+from skimage import io
 
 class DRDataset(Dataset):
 

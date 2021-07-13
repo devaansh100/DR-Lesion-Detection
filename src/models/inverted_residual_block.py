@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from squeeze_excitation import SqueezeAndExcitation
 import sys
-sys.path.append('../')
+sys.path.append('../config/')
 from config import read_config
 
 config = read_config()
