@@ -1,4 +1,4 @@
- General
+# General
 .DS_Store
 .AppleDouble
 .LSOverride
@@ -27,3 +27,9 @@ Temporary Items
 
 # Images from the dataset
 .jpeg
+__pycache__/
+*.py[cod]
+
+#Model copies
+*.pth
+*.pt
