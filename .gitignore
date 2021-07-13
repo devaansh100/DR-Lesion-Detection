@@ -25,7 +25,11 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+# Images from the dataset
+.jpeg
 __pycache__/
 *.py[cod]
 
+#Model copies
 *.pth
+*.pt
