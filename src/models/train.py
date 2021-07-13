@@ -8,11 +8,13 @@ from tqdm import tqdm
 from efficientnet import EfficientNet
 import numpy as np
 import torch.nn as nn
-import yaml
 import torch.nn.functional as F
 import pandas as pd
 from predict_class import predict
 from collections import Counter
+import sys
+sys.path.append('../')
+from config import read_config
 
 def weights_init(m):
 	if isinstance(m, nn.Conv2d):
@@ -23,13 +25,11 @@ def weights_init(m):
 			pass
 
 def train():
-	config_file = open('config.yml', 'r')
-	config = yaml.safe_load(config_file)
-	DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+	config = read_config()
 	model = EfficientNet(0.5, 1)
 	model.apply(weights_init)
-	model = model.to(DEVICE)
+	model = model.to(config['DEVICE'])
 	loss_fn = nn.MSELoss()
 	optimizer = optim.Adam(model.parameters(), lr = config['LEARNING_RATE'])
 	scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
@@ -48,8 +48,8 @@ def train():
 		total = training.__len__()
 		model.train()
 		for batch_idx, (images, labels) in enumerate(tqdm(training_loader)):
-			images = images.to(DEVICE)
-			labels = labels.to(DEVICE)
+			images = images.to(config['DEVICE'])
+			labels = labels.to(config['DEVICE'])
 			
 			predictions = model(images)
 
@@ -74,8 +74,8 @@ def train():
 		total = validation.__len__()
 		model.eval()	
 		for batch_idx, (images, labels) in enumerate(tqdm(validation_loader)):
-			images = images.to(DEVICE)
-			labels = labels.to(DEVICE)
+			images = images.to(config['DEVICE'])
+			labels = labels.to(config['DEVICE'])
 
 			predictions = model(images)
 

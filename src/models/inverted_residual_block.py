@@ -3,7 +3,11 @@ from torch import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
 from squeeze_excitation import SqueezeAndExcitation
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+import sys
+sys.path.append('../')
+from config import read_config
+
+config = read_config()
 class InvertedResidualBlock(nn.Module):
 	def __init__(self, expand_channels, kernel_size, out_channels, in_channels, stride, padding, squeeze_channels = 4):
 		'''
@@ -64,7 +68,7 @@ class InvertedResidualBlock(nn.Module):
 
 		if self.training and self.use_skip:
 			survival = torch.rand(x.shape[0], 1, 1 , 1) < self.survival_threshold
-			survival = survival.to(DEVICE)
+			survival = survival.to(config['DEVICE'])
 			x = torch.div(x, self.survival_threshold) * survival
 			return x + initial
 		else:	

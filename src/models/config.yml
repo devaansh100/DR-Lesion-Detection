@@ -1,3 +1,4 @@
+DATASET: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/
 VAL_IMG: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/validation_preprocessed/
 TRAIN_IMG: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/train_data_unzip/train_preprocessed/
 TEST_IMG: /Volumes/Seagate Backup Plus Drive/DR Kaggle Dataset/test_data_unzip/test_preprocessed/
