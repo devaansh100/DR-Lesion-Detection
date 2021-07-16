@@ -1,18 +1,20 @@
-import torch
 from efficientnet import EfficientNet
-import numpy as np
-import torch.nn as nn
+from transfer_learning import Pretrained
 from torch.utils.data import DataLoader
 from dataset import DRDataset
 from tqdm import tqdm
+from tqdm import tqdm
+from config import read_config
+from collection import Counter
+
+import torch
+import numpy as np
+import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision
-from tqdm import tqdm
 import sys
 sys.path.append('../config/')
-from config import read_config
 import pandas as pd
-from collection import Counter
 
 def main():
 	
@@ -22,7 +24,11 @@ def main():
 	correct = 0
 	total = validation.__len__()
 
-	model = EfficientNet(0.65, 1)
+	# model = EfficientNet(0.65, 1)
+	googlenet = models.googlenet(pretrained=True)
+	for param in googlenet.parameters():
+	  param.requires_grad = False
+	model = Pretrained(googlenet)
 	model.load_state_dict(torch.load(config['MODEL_PATH'] + config['MODEL_NAME'], map_location = config['DEVICE']))
 
 	label_dist = Counter(validation.labels.iloc[:,1])
@@ -42,16 +48,14 @@ def main():
 	print(f'Labels: {label_dist} \t Predictions: {predict_dist}')
 
 def predict(predictions, labels):
-	predictions[predictions < 0.5] = 0
-	predictions[torch.logical_and(predictions >= 0.5, predictions < 1.5)] = 1
-	predictions[torch.logical_and(predictions >= 1.5, predictions < 2.5)] = 2
-	predictions[torch.logical_and(predictions >= 2.5, predictions < 3.5)] = 3
-	predictions[predictions >= 3.5] = 4
 
-	n_correct_predictions = (predictions == labels).sum()
+	prediction_probabilities = F.softmax(predictions, dim = -1)
+	predicted_classes = torch.from_numpy(np.array([int(torch.argmax(x)) for x in prediction_probabilities]))
+	predicted_classes = predicted_classes.to(DEVICE)
+	correct += (predicted_classes == labels).sum()
+	n_correct_predictions = (predicted_classes == labels).sum()
 
-	return n_correct_predictions, predictions
-
+	return (n_correct_predictions, predicted_classes)
 
 if __name__ == '__main__':
 	main()

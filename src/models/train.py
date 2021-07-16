@@ -16,6 +16,7 @@ from dataset import DRDataset
 from tqdm import tqdm
 from efficientnet import EfficientNet
 from config import read_config
+from transer_learning import Pretrained
 
 def weights_init(m):
 	if isinstance(m, nn.Conv2d):
@@ -29,7 +30,11 @@ def train():
 	'''Training Loop'''
 	# Initialising config and training objects
 	config = read_config()
-	model = EfficientNet(0.5, 1)
+	# model = EfficientNet(0.5, 1)
+	googlenet = models.googlenet(pretrained=True)
+	for param in googlenet.parameters():
+	  param.requires_grad = False
+	model = Pretrained(googlenet)
 	optimizer = optim.Adam(model.parameters(), lr = config['LEARNING_RATE'])
 	scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 	checkpoint = {'epoch': 0, 'min_valid_loss': np.inf}
@@ -46,8 +51,9 @@ def train():
 	loss_fn = nn.MSELoss()
 
 	# Defining the dataset and the data loader
-	training = DRDataset(config['TRAIN_LABELS'], config['TRAIN_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
-	validation = DRDataset(config['VAL_LABELS'], config['VAL_IMG'], transforms.Compose([transforms.ToTensor(), transforms.Resize(model.input_size)]))
+	transformations = transforms.Compose([transforms.ToTensor(), transforms.Resize(config['IMG_SIZE'])])
+	training = DRDataset(config['TRAIN_LABELS'], config['TRAIN_IMG'], transformations)
+	validation = DRDataset(config['VAL_LABELS'], config['VAL_IMG'], transformations)
 
 	labels = list(training.labels.iloc[:,1])
 	hist = torch.tensor(list(Counter(labels).values()))
@@ -70,9 +76,9 @@ def train():
 
 		#Looping over all training batches
 		model.train()
-		train_predict_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
-		train_correct_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
-		train_label_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
+		train_predict_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+		train_correct_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+		train_label_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 		for batch_idx, (images, labels) in enumerate(tqdm(training_loader)):
 			
 			# Transferring images to the GPU
@@ -84,8 +90,8 @@ def train():
 
 			# Calculating the loss and the predictions
 			batch_number = predictions.shape[0]
-			predictions = predictions.view(batch_number, 1).float()
-			labels = labels.view(batch_number, 1).float()
+			predictions = predictions.view(batch_number, 6).float()
+			labels = labels.view(batch_number, 6).float()
 
 			n_correct, predicted_classes = predict(predictions, labels)
 			correct += n_correct
@@ -119,9 +125,9 @@ def train():
 
 		# Looping over the validation data
 		model.eval()
-		val_predict_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
-		val_correct_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
-		val_label_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
+		val_predict_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+		val_correct_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+		val_label_dist = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 		for batch_idx, (images, labels) in enumerate(tqdm(validation_loader)):
 
 			# Transferring images to the GPU
@@ -133,8 +139,8 @@ def train():
 
 			# Calculating the loss and the predictions
 			batch_number = predictions.shape[0]
-			predictions = predictions.view(batch_number, 1).float()
-			labels = labels.view(batch_number, 1).float()
+			predictions = predictions.view(batch_number, 6).float()
+			labels = labels.view(batch_number, 6).float()
 
 			# Filling in the prediction distributions and outputs
 			n_correct, predicted_classes = predict(predictions, labels)
