@@ -19,7 +19,7 @@ class DRDataset(Dataset):
 		pass
 
 	def __getitem__(self, index):
-		img_path = self.root_dir + self.labels.iloc[index, 0] + '.jpeg'
+		img_path = self.root_dir + self.labels.iloc[index, 0] #+ '.jpeg'
 		img = io.imread(img_path)
 		truth_value = torch.tensor(int(self.labels.iloc[index, 1])) 
 
