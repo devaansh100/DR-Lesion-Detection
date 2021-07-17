@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import cv2
 import torch
 import sys
+import numpy as np
 sys.path.append('../config/')
 from config import read_config
 
@@ -18,7 +19,7 @@ def create_saliency_map(dataset_original, dataset_normalised, index, plot = Fals
 	for param in googlenet.parameters():
 		param.requires_grad = False
 	model = Pretrained(googlenet)
-	model.load_state_dict(torch.load(config['MODEL_PATH'] + 'final_googlenet.pth', map_location = config['DEVICE']))
+	model.load_state_dict(torch.load(config['MODEL_PATH'] + config['MODEL_NAME'], map_location = config['DEVICE']))
 
 	target_layer = list(model.modules())[-10]
 	img, truth = dataset_normalised.__getitem__(index)
