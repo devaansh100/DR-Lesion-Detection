@@ -1,0 +1,22 @@
+DATASET: /Volumes/Seagate Backup Plus Drive/DDR_Dataset/DDR-dataset/DR_grading/test/
+
+VAL_IMG: /Volumes/Seagate Backup Plus Drive/DDR_Dataset/DDR-dataset/validation_preprocessed/
+TRAIN_IMG: /Volumes/Seagate Backup Plus Drive/DDR_Dataset/DDR-dataset/train_preprocessed/
+TEST_IMG: /Volumes/Seagate Backup Plus Drive/DDR_Dataset/DDR-dataset/test_preprocessed/
+
+TRAIN_LABELS: /Volumes/Seagate Backup Plus Drive/DDR_Dataset/DDR-dataset/DR_grading/trainingLabels.csv
+VAL_LABELS: /Volumes/Seagate Backup Plus Drive/DDR_Dataset/DDR-dataset/DR_grading/validationLabels.csv
+TEST_LABELS: /Volumes/Seagate Backup Plus Drive/DDR_Dataset/DDR-dataset/DR_grading/test.txt
+
+MODEL_PATH: /Users/devaanshgupta/Desktop/PS-I/DR-Lesion-Detection/models/
+MODEL_NAME: final_googlenet.pth
+
+CHECKPOINT_PATH: /Users/devaanshgupta/Desktop/PS-I/DR-Lesion-Detection/models/
+CHECKPOINT_NAME: checkpoint.pt
+
+NUM_EPOCHS: 100
+NUM_WORKERS: 2
+BATCH_SIZE: 32
+LEARNING_RATE: 1.0e-3
+LOAD_CHECKPOINT: true
+IMG_SIZE: 800
